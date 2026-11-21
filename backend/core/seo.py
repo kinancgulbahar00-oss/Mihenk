@@ -87,8 +87,8 @@ def head_tags() -> str:
         f'<link rel="canonical" href="{esc}/" />',
         f'<meta property="og:url" content="{esc}/" />',
         f'<meta property="og:image" content="{esc}/og-image.png" />',
-        '<meta property="og:image:width" content="810" />',
-        '<meta property="og:image:height" content="540" />',
+        '<meta property="og:image:width" content="1200" />',
+        '<meta property="og:image:height" content="630" />',
         f'<meta name="twitter:image" content="{esc}/og-image.png" />',
         f'<script type="application/ld+json">{data}</script>',
     ])

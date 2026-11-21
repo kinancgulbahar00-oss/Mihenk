@@ -22,7 +22,7 @@ def is_known_weak_password(password: str) -> bool:
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Phishing Campaign Intelligence Platform"
-    VERSION: str = "1.1.0"
+    VERSION: str = "2.0.0"
     API_V1_STR: str = ""
 
     DATABASE_URL: str = "sqlite:///./cti_platform.db"
