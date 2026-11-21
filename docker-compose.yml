@@ -1,20 +1,64 @@
-version: '3.8'
+# Mihenk — Docker Compose dagitimi
+#
+# Gerekli: proje kokunde .env dosyasi (bkz. .env.example). Asagidaki degiskenler
+# tanimli degilse Compose calismayi reddeder:
+#   POSTGRES_PASSWORD, ADMIN_PASSWORD_HASH (veya ADMIN_PASSWORD)
+#
+# Disariya yalnizca TLS sonlandiran ters vekil (Caddy) acilir. Veritabani ve arka uc
+# yalnizca Compose ic aglarinda erisilebilir.
+#
+# Imajlar surum + SHA-256 ozetiyle sabitlenmistir (Y-04): ayni dosya her gun ayni icerigi
+# kurar. Guncellemeler Dependabot ile gelir (.github/dependabot.yml) ve CI'da Trivy ile
+# taranir (.github/workflows/security.yml). Ozeti elle guncellemek icin:
+#   docker buildx imagetools inspect caddy:<surum>-alpine --format '{{json .Manifest.Digest}}'
+#
+# Ag yapisi (Y-08):
+#   edge    : yalnizca vekil; disariya acilan portlar ve ACME
+#   app_net : vekil <-> arka uc (ic ag, sabit adresler). Arka uc vekil basliklarina
+#             (X-Forwarded-For) YALNIZCA vekilin sabit adresinden guvenir.
+#   db_net  : arka uc <-> veritabani (ic ag, internete cikis yok)
+#   egress  : arka ucun analiz icin internete cikisi; vekil bu agda degildir
+
+# Kayit surucusu sinirlari (B-11, rapor 7.7): kimligi dogrulanmamis her istek kayit satiri urettigi
+# icin varsayilan json-file surucusu diski doldurabilir.
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
 
 services:
   db:
-    image: postgres:15-alpine
+    image: postgres:16.16-alpine@sha256:81e77a4833487b8132fe4b00bedd39dc3f74b8641e387f19312a48f7de218c2e
     container_name: cti_postgres_db
-    restart: always
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: cti_user
-      POSTGRES_PASSWORD: cti_password
-      POSTGRES_DB: cti_db
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: ${POSTGRES_USER:-cti_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD .env dosyasinda tanimlanmali}
+      POSTGRES_DB: ${POSTGRES_DB:-cti_db}
+    # Port eslemesi yok: veritabani ana makinenin ag arayuzlerine yayimlanmaz.
+    # Yerel hata ayiklama gerekiyorsa gecici olarak: ports: ["127.0.0.1:5432:5432"]
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks: [db_net]
+    logging: *default-logging
+    # Kaynak sinirlari (Y-03): tek bir servis ana makinenin bellegini tuketemez
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 200
+    security_opt:
+      - no-new-privileges:true
+    # Sikilastirma (Z-09): salt okunur kok dosya sistemi; yazilabilir yalnizca veri birimi ve
+    # gecici dizinler. Yalnizca giris betiginin (dizin sahipligini ayarlayip postgres
+    # kullanicisina gecmek icin) ihtiyac duydugu yetenekler verilir.
+    read_only: true
+    tmpfs:
+      - /var/run/postgresql:size=1m
+      - /tmp:size=64m
+    cap_drop: [ALL]
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U cti_user -d cti_db"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -23,31 +67,119 @@ services:
     build:
       context: .
       dockerfile: backend/Dockerfile
+    image: mihenk-backend:local
     container_name: cti_fastapi_backend
-    restart: always
-    ports:
-      - "8000:8000"
+    restart: unless-stopped
+    # Yalnizca ic aga acik; disaridan erisim Caddy uzerinden
+    expose:
+      - "8000"
+    # D-04: .env dosyasinin TAMAMI arka uca verilir. Boylece .env.example'daki her ayar (ikinci etken,
+    # guvenilen aglar, giris/analiz sinirlari, CORS...) uygulamaya ulasir; ad ad sayilan bir listede
+    # unutulan ayar sessizce varsayilanda kalmaz (backend/tests/test_security_v4.py bunu denetler).
+    # Asagidaki 'environment' yalnizca Compose'un URETTIGI veya SABITLEDIGI degerlerdir ve .env'deki
+    # ayni adli degerin onune gecer.
+    env_file: .env
     environment:
-      - DATABASE_URL=postgresql+psycopg2://cti_user:cti_password@db:5432/cti_db
-      - VIRUSTOTAL_API_KEY=${VIRUSTOTAL_API_KEY}
-      - ABUSEIPDB_API_KEY=${ABUSEIPDB_API_KEY}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-yıldızdanselamlar}
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-cti_user}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD .env dosyasinda tanimlanmali}@db:5432/${POSTGRES_DB:-cti_db}
+      COOKIE_SECURE: "true"
+      # Uvicorn bu degiskeni --forwarded-allow-ips olarak okur: vekil basliklarina yalnizca
+      # vekilin sabit adresinden guvenilir (Y-08). '*' KULLANMAYIN.
+      FORWARDED_ALLOW_IPS: ${PROXY_IP:-172.31.250.2}
+    # Z-07 / D-06: analiz edilen adlar, var olmayan adlar icin yanit uydurmayan genel cozumleyicilerle
+    # cozumlenir (Compose servis adlari Docker'in ic DNS'iyle yine cozumlenir). Ana makinenin veya
+    # servis saglayicinin cozumleyicisi ic adlari bilebilir ya da olmayan adlara bilgilendirme sayfasi
+    # adresi dondurebilir. Kurumsal agda dis DNS kapaliysa .env'de ANALYSIS_DNS_1/2 ile degistirin.
+    dns:
+      - ${ANALYSIS_DNS_1:-1.1.1.1}
+      - ${ANALYSIS_DNS_2:-9.9.9.9}
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    # Uygulama (~130 MiB) + uc ayristirma iscisi (en agir belgede ~180 MiB; G-08)
+    mem_limit: 1g
+    cpus: 1.5
+    pids_limit: 256
+    logging: *default-logging
+    # Saglik denetimi (B-03, rapor 7.7): yeniden baslatmalar ve takilmalar 'docker ps' / izleme
+    # sisteminde gorunur
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=4).status == 200 else 1)"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      app_net:
+        ipv4_address: ${BACKEND_IP:-172.31.250.3}
+      db_net: {}
+      egress: {}
     depends_on:
       db:
         condition: service_healthy
 
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: cti_react_frontend
-    restart: always
+  proxy:
+    image: caddy:2.11.9-alpine@sha256:003a97808e781aa9f7e75cc2f43d34d461099031faf5e20faefb9f61126836f0
+    container_name: cti_caddy_proxy
+    restart: unless-stopped
     ports:
-      - "5173:5173"
+      - "443:443"
+      - "80:80"
     environment:
-      - VITE_API_BASE_URL=http://localhost:8000
+      # Gercek alan adi verilirse Caddy otomatik olarak gecerli sertifika alir.
+      # 'localhost' icin Caddy'nin yerel CA'si kullanilir (tarayici ilk seferde uyari verebilir).
+      SITE_ADDRESS: ${SITE_ADDRESS:-localhost}
+      MAX_REQUEST_BODY: ${MAX_REQUEST_BODY:-16KB}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    security_opt:
+      - no-new-privileges:true
+    # Sikilastirma (Z-09): internete acik vekil salt okunur calisir; yalnizca 80/443'e
+    # baglanma yetenegi verilir. Sertifikalar ve ayarlar adlandirilmis birimlerde (/data, /config).
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    # B-03: vekilde artik istek suresi sinirlari var (deploy/Caddyfile); bellek siniri yine de 256 MiB'den
+    # yukseltildi: TLS el sikismasi ve HTTP/2 tamponlari baglanti basina birkac on KB tutar.
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 128
+    logging: *default-logging
+    healthcheck:
+      # Caddy yonetim API'si yalnizca konteynerin icinden (localhost:2019) erisilebilir
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:2019/config/"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      edge: {}
+      app_net:
+        ipv4_address: ${PROXY_IP:-172.31.250.2}
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+
+networks:
+  edge: {}
+  # Vekil ile arka uc arasi; sabit alt ag (cakisma varsa .env'de APP_SUBNET/PROXY_IP/BACKEND_IP)
+  app_net:
+    internal: true
+    ipam:
+      config:
+        - subnet: ${APP_SUBNET:-172.31.250.0/29}
+  # Veritabaninin internete cikisi yok
+  db_net:
+    internal: true
+  egress: {}
 
 volumes:
   postgres_data:
+  caddy_data:
+  caddy_config:

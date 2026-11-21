@@ -1,0 +1,8 @@
+# Gelistirme ve CI araclari (Z-08). Calisma zamani bagimliliklariyla ayni surumleri kullanmasi
+# icin requirements.txt kisit olarak verilir. Kilit dosyasini yeniden uretmek icin:
+#   uv pip compile backend/requirements-dev.in -c backend/requirements.txt --generate-hashes \
+#     --python-version 3.11 --python-platform linux -o backend/requirements-dev.txt
+pytest
+pip-audit
+# fastapi.testclient icin
+httpx

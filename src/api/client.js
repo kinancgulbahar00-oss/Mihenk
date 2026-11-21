@@ -1,10 +1,15 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
+// Varsayilan: arayuz ve API ayni kokenden sunulur (gelistirmede Vite vekili, uretimde arka uc).
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '');
+
+function apiFetch(path, options = {}) {
+  return fetch(`${API_BASE_URL}${path}`, { credentials: 'include', ...options });
+}
 
 export async function analyzeUrl(urlToAnalyze) {
   let response;
 
   try {
-    response = await fetch(`${API_BASE_URL}/analyze/url`, {
+    response = await apiFetch('/analyze/url', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -16,6 +21,13 @@ export async function analyzeUrl(urlToAnalyze) {
   }
 
   if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    if ([400, 413, 429, 503, 504].includes(response.status) && typeof errorData.detail === 'string') {
+      throw new Error(errorData.detail);
+    }
+    if (response.status === 422) {
+      throw new Error('Adres geçersiz veya çok uzun (en fazla 2048 karakter).');
+    }
     throw new Error(`Analiz tamamlanamadı (HTTP ${response.status}). Lütfen tekrar deneyin.`);
   }
 
@@ -25,7 +37,7 @@ export async function analyzeUrl(urlToAnalyze) {
 export async function fetchBrands() {
   let response;
   try {
-    response = await fetch(`${API_BASE_URL}/brands`);
+    response = await apiFetch('/brands');
   } catch {
     throw new Error('Katalog servisine ulaşılamadı.');
   }
@@ -35,52 +47,48 @@ export async function fetchBrands() {
   return response.json();
 }
 
-export function getAdminToken() {
-  return localStorage.getItem('cti_admin_token') || sessionStorage.getItem('cti_admin_token') || '';
-}
-
-export function setAdminToken(token, remember = true) {
-  if (remember) {
-    localStorage.setItem('cti_admin_token', token);
-  } else {
-    sessionStorage.setItem('cti_admin_token', token);
+// Yonetici oturumu yalnizca sunucunun koydugu HttpOnly; Secure; SameSite=Strict cerezde tutulur.
+// Oturum anahtari JavaScript tarafindan okunamaz ve tarayici deposuna yazilmaz.
+function clearLegacyToken() {
+  try {
+    localStorage.removeItem('cti_admin_token');
+    sessionStorage.removeItem('cti_admin_token');
+  } catch {
+    /* depolama kullanilamiyor olabilir */
   }
 }
+clearLegacyToken();
 
-export function clearAdminToken() {
-  localStorage.removeItem('cti_admin_token');
-  sessionStorage.removeItem('cti_admin_token');
-}
-
-export async function adminLogin(password, remember = true) {
-  const response = await fetch(`${API_BASE_URL}/admin/login`, {
+export async function adminLogin(password, remember = false, otp = '') {
+  const response = await apiFetch('/admin/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ password }),
+    body: JSON.stringify(otp ? { password, remember, otp } : { password, remember }),
   });
 
   if (!response.ok) {
+    if (response.status === 429) {
+      throw new Error('Çok fazla hatalı deneme yapıldı. Lütfen birkaç dakika sonra tekrar deneyin.');
+    }
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.detail || 'Giriş başarısız. Parolanızı kontrol edin.');
+    throw new Error(typeof errorData.detail === 'string' ? errorData.detail : 'Giriş başarısız. Parolanızı kontrol edin.');
   }
 
-  const data = await response.json();
-  if (data.token) {
-    setAdminToken(data.token, remember);
+  return response.json();
+}
+
+export async function adminLogout() {
+  try {
+    await apiFetch('/admin/logout', { method: 'POST' });
+  } catch {
+    /* sunucuya ulasilamasa da arayuz oturumu kapatir */
   }
-  return data;
 }
 
 export async function adminVerify() {
-  const token = getAdminToken();
-  if (!token) return { valid: false };
-
   try {
-    const response = await fetch(`${API_BASE_URL}/admin/verify`, {
-      headers: { 'X-Admin-Token': token },
-    });
+    const response = await apiFetch('/admin/verify');
     if (!response.ok) {
-      clearAdminToken();
       return { valid: false };
     }
     return await response.json();
@@ -90,9 +98,7 @@ export async function adminVerify() {
 }
 
 export async function fetchAdminStats() {
-  const token = getAdminToken();
-  const headers = token ? { 'X-Admin-Token': token } : {};
-  const response = await fetch(`${API_BASE_URL}/admin/stats`, { headers });
+  const response = await apiFetch('/admin/stats');
   if (!response.ok) {
     throw new Error('İstatistikler alınamadı.');
   }
@@ -100,8 +106,8 @@ export async function fetchAdminStats() {
 }
 
 export async function fetchLists(listType) {
-  const url = listType ? `${API_BASE_URL}/lists?list_type=${listType}` : `${API_BASE_URL}/lists`;
-  const response = await fetch(url);
+  const path = listType ? `/lists?list_type=${encodeURIComponent(listType)}` : '/lists';
+  const response = await apiFetch(path);
   if (!response.ok) {
     throw new Error(`Liste getirilemedi (HTTP ${response.status}).`);
   }
@@ -109,17 +115,9 @@ export async function fetchLists(listType) {
 }
 
 export async function addListItem(itemData) {
-  const token = getAdminToken();
-  const headers = {
-    'Content-Type': 'application/json',
-  };
-  if (token) {
-    headers['X-Admin-Token'] = token;
-  }
-
-  const response = await fetch(`${API_BASE_URL}/lists`, {
+  const response = await apiFetch('/lists', {
     method: 'POST',
-    headers,
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(itemData),
   });
 
@@ -132,15 +130,8 @@ export async function addListItem(itemData) {
 }
 
 export async function deleteListItem(itemId) {
-  const token = getAdminToken();
-  const headers = {};
-  if (token) {
-    headers['X-Admin-Token'] = token;
-  }
-
-  const response = await fetch(`${API_BASE_URL}/lists/${itemId}`, {
+  const response = await apiFetch(`/lists/${encodeURIComponent(itemId)}`, {
     method: 'DELETE',
-    headers,
   });
 
   if (!response.ok) {

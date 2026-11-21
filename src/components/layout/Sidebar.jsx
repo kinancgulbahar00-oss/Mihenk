@@ -95,7 +95,7 @@ export function Sidebar({ route, recent, onPickRecent, onClearRecent, open, onCl
           ) : (
             <ul className="mt-2 min-h-0 space-y-px overflow-y-auto">
               {recent.map((r) => {
-                const sev = SEVERITY[r.level === 'safe' ? 'low' : bandOf(r.score).key];
+                const sev = SEVERITY[r.level === 'safe' ? 'low' : r.level === 'unknown' ? 'unknown' : bandOf(r.score).key];
                 return (
                   <li key={r.query}>
                     <button

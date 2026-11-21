@@ -1,0 +1,9 @@
+{
+  "recorded": "2026-11-20",
+  "source": "Chromium 156.0.8078.4 (Playwright) gezinme istegi; 7. guvenlik raporu, E-06 sunucu kaydi",
+  "note": "Sayfa yoklamasinin gonderdigi basliklarin gercek tarayicidan kaydedilen degerleri (E-06). Chrome'un kararli surumu degistiginde bu dosya yeniden kaydedilmelidir: surum, Accept degeri ve sec-ch-ua 'GREASE' markasi surumle birlikte degisir. 'accept' degerinin ilk 70 karakteri sunucu kaydindan, devami Chrome'un onceki surumlerinden alinmistir. 'sec_ch_ua' sablonu Chromium 156'nin HTTPS uzerinden gonderdigi degerden alinmistir (8. rapor, G-03: GREASE markasinin metni, surumu ve sirasi); baslik sirasi kararli Chrome'unkidir. Test paketi kaydin 365 gunden eski olmadigini denetler.",
+  "chrome_major": 156,
+  "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/jxl,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+  "accept_language": "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7",
+  "sec_ch_ua": "\"Not:A-Brand\";v=\"8\", \"Chromium\";v=\"{major}\", \"Google Chrome\";v=\"{major}\""
+}

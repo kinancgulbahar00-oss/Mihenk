@@ -1,0 +1,11 @@
+{
+  "name": "Mihenk — Oltalama (Phishing) URL ve Alan Adı Analizi",
+  "short_name": "Mihenk",
+  "description": "Şüpheli bağlantı ve alan adları için gerekçeli risk skoru ve tehdit istihbaratı brifingi.",
+  "lang": "tr",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#121418",
+  "theme_color": "#121418",
+  "icons": [{ "src": "/logo.jpg", "sizes": "200x200", "type": "image/jpeg" }]
+}

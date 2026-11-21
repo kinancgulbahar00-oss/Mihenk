@@ -164,7 +164,8 @@ def test_catalog_integrity():
     cat = catalog()
     assert len(cat["brands"]) >= 200
     for b in cat["brands"]:
-        assert b["domains"], b["id"]
+        # B-07: dogrulanamayan resmi adres katalogdan cikarilir; kurum kaydi gerekcesiyle kalir
+        assert b["domains"] or b.get("domains_unverified"), b["id"]
         assert b["aliases"] or b["weak_aliases"], b["id"]
 
 
@@ -174,11 +175,14 @@ def test_turkish_and_cyrillic_normalization():
 
 
 def test_every_official_domain_is_clean():
-    """Katalogdaki her resmi adres (alt alan adi ve hassas yollarla) temiz kalmali."""
+    """Katalogdaki her resmi adres (alt alan adi ve hassas yollarla) temiz kalmali. Kullanici icerigi
+    barindiran buyuk platformlarda guven yalnizca listelenen adlara verilir (B-06); bu adlar denetlenir."""
     flagged = []
     for b in catalog()["brands"]:
-        for d in b["domains"]:
-            for u in (d, f"www.{d}/giris", f"musteri.{d}/odeme"):
+        hosts = b["domains"] if b.get("trusted_hosts") is None else [t for t in b["trusted_hosts"] if "*" not in t]
+        for d in hosts:
+            variants = (d, f"www.{d}/giris", f"musteri.{d}/odeme") if b.get("trusted_hosts") is None else (d, f"{d}/giris")
+            for u in variants:
                 score, *_ = analyze(u, age=None)
                 if score >= 25:
                     flagged.append((u, score))
@@ -228,18 +232,17 @@ def test_single_brand_logo_with_card_form():
 def test_svg_logo_titles_are_not_page_title():
     """GitHub ana sayfasi musteri logolarini <svg><title>Vodafone</title> ile gosterir;
     bunlar sayfa basligi sayilmamali."""
-    from backend.core.page_probe import _PageParser
+    from backend.core.page_probe import _inspect_html
     html = ("<html><head><title>GitHub · Change is constant</title></head><body>"
             "<h1>Build and ship software</h1><svg><title>Vodafone</title></svg>"
             + "".join(f"<svg><title>{n}</title></svg>" for n in
                       ("Ford", "Duolingo", "Shopify", "Mercedes-Benz", "InfoSys", "Philips", "American Airlines", "EY"))
             + "<input type='password'></body></html>")
-    parser = _PageParser()
-    parser.feed(html)
-    assert parser.title == "GitHub · Change is constant"
-    assert "Vodafone" not in " ".join(parser.identity)
-    p = page(parser.title, ["Şifre"], host="github.com")
-    p["identity"], p["logos"] = parser.identity, parser.logos
+    doc, _ = _inspect_html(html, "https://github.com/")
+    assert doc["title"] == "GitHub · Change is constant"
+    assert "Vodafone" not in " ".join(doc["identity"]) and "Vodafone" in doc["logos"]
+    p = page(doc["title"], ["Şifre"], host="github.com")
+    p["identity"], p["logos"] = doc["identity"], doc["logos"]
     score, *_ = analyze("github.com", age=6900, page=p)
     assert score < 25
 

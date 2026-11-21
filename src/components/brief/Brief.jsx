@@ -149,7 +149,7 @@ export function Brief({ data, verdict, tlp, reference, stamp }) {
                       </span>
                     </p>
                   </div>
-                  <ScoreScale score={score} bandKey={verdict.key} />
+                  <ScoreScale score={score} bandKey={verdict.band || verdict.key} />
                 </div>
               </header>
 

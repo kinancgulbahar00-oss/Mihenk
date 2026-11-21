@@ -4,10 +4,15 @@ dist/
 
 __pycache__/
 *.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
 .venv/
 venv/
 
 .env
+.env.*
+!.env.example
 
 *.db
 *.sqlite3
@@ -18,3 +23,12 @@ venv/
 .impeccable/config.local.json
 .impeccable/questions/
 .impeccable/hook.cache.json
+
+# Guvenlik raporu ve kanitlari (TLP:AMBER) depoya eklenmez
+rapor/
+
+# Editor / isletim sistemi / yardimci arac klasorleri
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

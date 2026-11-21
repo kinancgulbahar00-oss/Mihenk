@@ -1,0 +1,27 @@
+# Gizli degerler ve yerel veriler imaja kopyalanmaz
+.env
+.env.*
+!.env.example
+*.db
+*.sqlite3
+*.log
+
+# Depo ve arac klasorleri
+.git
+.gitignore
+.impeccable
+node_modules
+dist
+**/__pycache__
+**/*.py[cod]
+.venv
+venv
+
+# Rapor ve kanitlar (TLP:AMBER) imaja girmez
+rapor
+
+# Calisma zamaninda gerekmeyen test ve gelistirme dosyalari imaja girmez (D-06)
+backend/tests
+backend/requirements-dev.in
+backend/requirements-dev.txt
+.pytest_cache

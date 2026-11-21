@@ -1,0 +1,324 @@
+# Bilincli ve SURELI risk kabulleri. Suresi dolan kayit yeniden derlemeyi basarisiz kilar.
+vulnerabilities:
+  - id: CVE-2026-78661
+    paths:
+      - "usr/bin/caddy"
+    statement: >-
+      caddy:2.11.9 (en guncel surum) icindeki golang.org/x/net/html; duzeltme 0.62.0 ile yeni bir
+      Caddy surumu gerektiriyor. Vekil yalnizca reverse_proxy kullaniyor, HTML ayristiran
+      modul (templates/markdown) yuklu degil. Yeni Caddy surumu cikinca Dependabot ile guncellenecek.
+    expired_at: 2026-12-31
+
+# Z-08: veritabani imajindaki gosu (Go stdlib) kayitlari. Kapsam yalnizca bu ikilidir.
+  - id: CVE-2025-61726
+    paths:
+      - "usr/local/bin/gosu"
+    statement: >-
+      postgres:16.16-alpine (en guncel 16.x imaji) icindeki gosu ikilisi Go 1.24.6 standart
+      kitapligiyla derlenmis. gosu yalnizca konteyner acilisinda giris betigi tarafindan bir kez
+      calistirilir (root -> postgres kullanicisina gecis + exec); TLS, HTTP, URL, x509, XML veya
+      MIME isleyen kod yoluna ve disaridan gelen veriye maruz kalmaz. Veritabani yalnizca ic agda
+      (db_net, internal) ve salt okunur kok dosya sistemiyle, sinirli yeteneklerle calisir (Z-09).
+      Yeni postgres imaji yayimlaninca Dependabot ile guncellenecek; tarih dolunca tarama yeniden basarisiz olur (Z-08).
+    expired_at: 2026-12-31
+  - id: CVE-2025-61729
+    paths:
+      - "usr/local/bin/gosu"
+    statement: >-
+      postgres:16.16-alpine (en guncel 16.x imaji) icindeki gosu ikilisi Go 1.24.6 standart
+      kitapligiyla derlenmis. gosu yalnizca konteyner acilisinda giris betigi tarafindan bir kez
+      calistirilir (root -> postgres kullanicisina gecis + exec); TLS, HTTP, URL, x509, XML veya
+      MIME isleyen kod yoluna ve disaridan gelen veriye maruz kalmaz. Veritabani yalnizca ic agda
+      (db_net, internal) ve salt okunur kok dosya sistemiyle, sinirli yeteneklerle calisir (Z-09).
+      Yeni postgres imaji yayimlaninca Dependabot ile guncellenecek; tarih dolunca tarama yeniden basarisiz olur (Z-08).
+    expired_at: 2026-12-31
+  - id: CVE-2025-68121
+    paths:
+      - "usr/local/bin/gosu"
+    statement: >-
+      postgres:16.16-alpine (en guncel 16.x imaji) icindeki gosu ikilisi Go 1.24.6 standart
+      kitapligiyla derlenmis. gosu yalnizca konteyner acilisinda giris betigi tarafindan bir kez
+      calistirilir (root -> postgres kullanicisina gecis + exec); TLS, HTTP, URL, x509, XML veya
+      MIME isleyen kod yoluna ve disaridan gelen veriye maruz kalmaz. Veritabani yalnizca ic agda
+      (db_net, internal) ve salt okunur kok dosya sistemiyle, sinirli yeteneklerle calisir (Z-09).
+      Yeni postgres imaji yayimlaninca Dependabot ile guncellenecek; tarih dolunca tarama yeniden basarisiz olur (Z-08).
+    expired_at: 2026-12-31
+  - id: CVE-2026-111943
+    paths:
+      - "usr/local/bin/gosu"
+    statement: >-
+      postgres:16.16-alpine (en guncel 16.x imaji) icindeki gosu ikilisi Go 1.24.6 standart
+      kitapligiyla derlenmis. gosu yalnizca konteyner acilisinda giris betigi tarafindan bir kez
+      calistirilir (root -> postgres kullanicisina gecis + exec); TLS, HTTP, URL, x509, XML veya
+      MIME isleyen kod yoluna ve disaridan gelen veriye maruz kalmaz. Veritabani yalnizca ic agda
+      (db_net, internal) ve salt okunur kok dosya sistemiyle, sinirli yeteneklerle calisir (Z-09).
+      Yeni postgres imaji yayimlaninca Dependabot ile guncellenecek; tarih dolunca tarama yeniden basarisiz olur (Z-08).
+    expired_at: 2026-12-31
+  - id: CVE-2026-25679
+    paths:
+      - "usr/local/bin/gosu"
+    statement: >-
+      postgres:16.16-alpine (en guncel 16.x imaji) icindeki gosu ikilisi Go 1.24.6 standart
+      kitapligiyla derlenmis. gosu yalnizca konteyner acilisinda giris betigi tarafindan bir kez
+      calistirilir (root -> postgres kullanicisina gecis + exec); TLS, HTTP, URL, x509, XML veya
+      MIME isleyen kod yoluna ve disaridan gelen veriye maruz kalmaz. Veritabani yalnizca ic agda
+      (db_net, internal) ve salt okunur kok dosya sistemiyle, sinirli yeteneklerle calisir (Z-09).
+      Yeni postgres imaji yayimlaninca Dependabot ile guncellenecek; tarih dolunca tarama yeniden basarisiz olur (Z-08).
+    expired_at: 2026-12-31
+  - id: CVE-2026-27145
+    paths:
+      - "usr/local/bin/gosu"
+    statement: >-
+      postgres:16.16-alpine (en guncel 16.x imaji) icindeki gosu ikilisi Go 1.24.6 standart
+      kitapligiyla derlenmis. gosu yalnizca konteyner acilisinda giris betigi tarafindan bir kez
+      calistirilir (root -> postgres kullanicisina gecis + exec); TLS, HTTP, URL, x509, XML veya
+      MIME isleyen kod yoluna ve disaridan gelen veriye maruz kalmaz. Veritabani yalnizca ic agda
+      (db_net, internal) ve salt okunur kok dosya sistemiyle, sinirli yeteneklerle calisir (Z-09).
+      Yeni postgres imaji yayimlaninca Dependabot ile guncellenecek; tarih dolunca tarama yeniden basarisiz olur (Z-08).
+    expired_at: 2026-12-31
+  - id: CVE-2026-32280
+    paths:
+      - "usr/local/bin/gosu"
+    statement: >-
+      postgres:16.16-alpine (en guncel 16.x imaji) icindeki gosu ikilisi Go 1.24.6 standart
+      kitapligiyla derlenmis. gosu yalnizca konteyner acilisinda giris betigi tarafindan bir kez
+      calistirilir (root -> postgres kullanicisina gecis + exec); TLS, HTTP, URL, x509, XML veya
+      MIME isleyen kod yoluna ve disaridan gelen veriye maruz kalmaz. Veritabani yalnizca ic agda
+      (db_net, internal) ve salt okunur kok dosya sistemiyle, sinirli yeteneklerle calisir (Z-09).
+      Yeni postgres imaji yayimlaninca Dependabot ile guncellenecek; tarih dolunca tarama yeniden basarisiz olur (Z-08).
+    expired_at: 2026-12-31
+  - id: CVE-2026-32281
+    paths:
+      - "usr/local/bin/gosu"
+    statement: >-
+      postgres:16.16-alpine (en guncel 16.x imaji) icindeki gosu ikilisi Go 1.24.6 standart
+      kitapligiyla derlenmis. gosu yalnizca konteyner acilisinda giris betigi tarafindan bir kez
+      calistirilir (root -> postgres kullanicisina gecis + exec); TLS, HTTP, URL, x509, XML veya
+      MIME isleyen kod yoluna ve disaridan gelen veriye maruz kalmaz. Veritabani yalnizca ic agda
+      (db_net, internal) ve salt okunur kok dosya sistemiyle, sinirli yeteneklerle calisir (Z-09).
+      Yeni postgres imaji yayimlaninca Dependabot ile guncellenecek; tarih dolunca tarama yeniden basarisiz olur (Z-08).
+    expired_at: 2026-12-31
+  - id: CVE-2026-32283
+    paths:
+      - "usr/local/bin/gosu"
+    statement: >-
+      postgres:16.16-alpine (en guncel 16.x imaji) icindeki gosu ikilisi Go 1.24.6 standart
+      kitapligiyla derlenmis. gosu yalnizca konteyner acilisinda giris betigi tarafindan bir kez
+      calistirilir (root -> postgres kullanicisina gecis + exec); TLS, HTTP, URL, x509, XML veya
+      MIME isleyen kod yoluna ve disaridan gelen veriye maruz kalmaz. Veritabani yalnizca ic agda
+      (db_net, internal) ve salt okunur kok dosya sistemiyle, sinirli yeteneklerle calisir (Z-09).
+      Yeni postgres imaji yayimlaninca Dependabot ile guncellenecek; tarih dolunca tarama yeniden basarisiz olur (Z-08).
+    expired_at: 2026-12-31
+  - id: CVE-2026-33811
+    paths:
+      - "usr/local/bin/gosu"
+    statement: >-
+      postgres:16.16-alpine (en guncel 16.x imaji) icindeki gosu ikilisi Go 1.24.6 standart
+      kitapligiyla derlenmis. gosu yalnizca konteyner acilisinda giris betigi tarafindan bir kez
+      calistirilir (root -> postgres kullanicisina gecis + exec); TLS, HTTP, URL, x509, XML veya
+      MIME isleyen kod yoluna ve disaridan gelen veriye maruz kalmaz. Veritabani yalnizca ic agda
+      (db_net, internal) ve salt okunur kok dosya sistemiyle, sinirli yeteneklerle calisir (Z-09).
+      Yeni postgres imaji yayimlaninca Dependabot ile guncellenecek; tarih dolunca tarama yeniden basarisiz olur (Z-08).
+    expired_at: 2026-12-31
+  - id: CVE-2026-33814
+    paths:
+      - "usr/local/bin/gosu"
+    statement: >-
+      postgres:16.16-alpine (en guncel 16.x imaji) icindeki gosu ikilisi Go 1.24.6 standart
+      kitapligiyla derlenmis. gosu yalnizca konteyner acilisinda giris betigi tarafindan bir kez
+      calistirilir (root -> postgres kullanicisina gecis + exec); TLS, HTTP, URL, x509, XML veya
+      MIME isleyen kod yoluna ve disaridan gelen veriye maruz kalmaz. Veritabani yalnizca ic agda
+      (db_net, internal) ve salt okunur kok dosya sistemiyle, sinirli yeteneklerle calisir (Z-09).
+      Yeni postgres imaji yayimlaninca Dependabot ile guncellenecek; tarih dolunca tarama yeniden basarisiz olur (Z-08).
+    expired_at: 2026-12-31
+  - id: CVE-2026-33818
+    paths:
+      - "usr/local/bin/gosu"
+    statement: >-
+      postgres:16.16-alpine (en guncel 16.x imaji) icindeki gosu ikilisi Go 1.24.6 standart
+      kitapligiyla derlenmis. gosu yalnizca konteyner acilisinda giris betigi tarafindan bir kez
+      calistirilir (root -> postgres kullanicisina gecis + exec); TLS, HTTP, URL, x509, XML veya
+      MIME isleyen kod yoluna ve disaridan gelen veriye maruz kalmaz. Veritabani yalnizca ic agda
+      (db_net, internal) ve salt okunur kok dosya sistemiyle, sinirli yeteneklerle calisir (Z-09).
+      Yeni postgres imaji yayimlaninca Dependabot ile guncellenecek; tarih dolunca tarama yeniden basarisiz olur (Z-08).
+    expired_at: 2026-12-31
+  - id: CVE-2026-39820
+    paths:
+      - "usr/local/bin/gosu"
+    statement: >-
+      postgres:16.16-alpine (en guncel 16.x imaji) icindeki gosu ikilisi Go 1.24.6 standart
+      kitapligiyla derlenmis. gosu yalnizca konteyner acilisinda giris betigi tarafindan bir kez
+      calistirilir (root -> postgres kullanicisina gecis + exec); TLS, HTTP, URL, x509, XML veya
+      MIME isleyen kod yoluna ve disaridan gelen veriye maruz kalmaz. Veritabani yalnizca ic agda
+      (db_net, internal) ve salt okunur kok dosya sistemiyle, sinirli yeteneklerle calisir (Z-09).
+      Yeni postgres imaji yayimlaninca Dependabot ile guncellenecek; tarih dolunca tarama yeniden basarisiz olur (Z-08).
+    expired_at: 2026-12-31
+  - id: CVE-2026-39821
+    paths:
+      - "usr/local/bin/gosu"
+    statement: >-
+      postgres:16.16-alpine (en guncel 16.x imaji) icindeki gosu ikilisi Go 1.24.6 standart
+      kitapligiyla derlenmis. gosu yalnizca konteyner acilisinda giris betigi tarafindan bir kez
+      calistirilir (root -> postgres kullanicisina gecis + exec); TLS, HTTP, URL, x509, XML veya
+      MIME isleyen kod yoluna ve disaridan gelen veriye maruz kalmaz. Veritabani yalnizca ic agda
+      (db_net, internal) ve salt okunur kok dosya sistemiyle, sinirli yeteneklerle calisir (Z-09).
+      Yeni postgres imaji yayimlaninca Dependabot ile guncellenecek; tarih dolunca tarama yeniden basarisiz olur (Z-08).
+    expired_at: 2026-12-31
+  - id: CVE-2026-39822
+    paths:
+      - "usr/local/bin/gosu"
+    statement: >-
+      postgres:16.16-alpine (en guncel 16.x imaji) icindeki gosu ikilisi Go 1.24.6 standart
+      kitapligiyla derlenmis. gosu yalnizca konteyner acilisinda giris betigi tarafindan bir kez
+      calistirilir (root -> postgres kullanicisina gecis + exec); TLS, HTTP, URL, x509, XML veya
+      MIME isleyen kod yoluna ve disaridan gelen veriye maruz kalmaz. Veritabani yalnizca ic agda
+      (db_net, internal) ve salt okunur kok dosya sistemiyle, sinirli yeteneklerle calisir (Z-09).
+      Yeni postgres imaji yayimlaninca Dependabot ile guncellenecek; tarih dolunca tarama yeniden basarisiz olur (Z-08).
+    expired_at: 2026-12-31
+  - id: CVE-2026-39836
+    paths:
+      - "usr/local/bin/gosu"
+    statement: >-
+      postgres:16.16-alpine (en guncel 16.x imaji) icindeki gosu ikilisi Go 1.24.6 standart
+      kitapligiyla derlenmis. gosu yalnizca konteyner acilisinda giris betigi tarafindan bir kez
+      calistirilir (root -> postgres kullanicisina gecis + exec); TLS, HTTP, URL, x509, XML veya
+      MIME isleyen kod yoluna ve disaridan gelen veriye maruz kalmaz. Veritabani yalnizca ic agda
+      (db_net, internal) ve salt okunur kok dosya sistemiyle, sinirli yeteneklerle calisir (Z-09).
+      Yeni postgres imaji yayimlaninca Dependabot ile guncellenecek; tarih dolunca tarama yeniden basarisiz olur (Z-08).
+    expired_at: 2026-12-31
+  - id: CVE-2026-42499
+    paths:
+      - "usr/local/bin/gosu"
+    statement: >-
+      postgres:16.16-alpine (en guncel 16.x imaji) icindeki gosu ikilisi Go 1.24.6 standart
+      kitapligiyla derlenmis. gosu yalnizca konteyner acilisinda giris betigi tarafindan bir kez
+      calistirilir (root -> postgres kullanicisina gecis + exec); TLS, HTTP, URL, x509, XML veya
+      MIME isleyen kod yoluna ve disaridan gelen veriye maruz kalmaz. Veritabani yalnizca ic agda
+      (db_net, internal) ve salt okunur kok dosya sistemiyle, sinirli yeteneklerle calisir (Z-09).
+      Yeni postgres imaji yayimlaninca Dependabot ile guncellenecek; tarih dolunca tarama yeniden basarisiz olur (Z-08).
+    expired_at: 2026-12-31
+  - id: CVE-2026-42504
+    paths:
+      - "usr/local/bin/gosu"
+    statement: >-
+      postgres:16.16-alpine (en guncel 16.x imaji) icindeki gosu ikilisi Go 1.24.6 standart
+      kitapligiyla derlenmis. gosu yalnizca konteyner acilisinda giris betigi tarafindan bir kez
+      calistirilir (root -> postgres kullanicisina gecis + exec); TLS, HTTP, URL, x509, XML veya
+      MIME isleyen kod yoluna ve disaridan gelen veriye maruz kalmaz. Veritabani yalnizca ic agda
+      (db_net, internal) ve salt okunur kok dosya sistemiyle, sinirli yeteneklerle calisir (Z-09).
+      Yeni postgres imaji yayimlaninca Dependabot ile guncellenecek; tarih dolunca tarama yeniden basarisiz olur (Z-08).
+    expired_at: 2026-12-31
+  - id: CVE-2026-56853
+    paths:
+      - "usr/local/bin/gosu"
+    statement: >-
+      postgres:16.16-alpine (en guncel 16.x imaji) icindeki gosu ikilisi Go 1.24.6 standart
+      kitapligiyla derlenmis. gosu yalnizca konteyner acilisinda giris betigi tarafindan bir kez
+      calistirilir (root -> postgres kullanicisina gecis + exec); TLS, HTTP, URL, x509, XML veya
+      MIME isleyen kod yoluna ve disaridan gelen veriye maruz kalmaz. Veritabani yalnizca ic agda
+      (db_net, internal) ve salt okunur kok dosya sistemiyle, sinirli yeteneklerle calisir (Z-09).
+      Yeni postgres imaji yayimlaninca Dependabot ile guncellenecek; tarih dolunca tarama yeniden basarisiz olur (Z-08).
+    expired_at: 2026-12-31
+  - id: CVE-2026-56858
+    paths:
+      - "usr/local/bin/gosu"
+    statement: >-
+      postgres:16.16-alpine (en guncel 16.x imaji) icindeki gosu ikilisi Go 1.24.6 standart
+      kitapligiyla derlenmis. gosu yalnizca konteyner acilisinda giris betigi tarafindan bir kez
+      calistirilir (root -> postgres kullanicisina gecis + exec); TLS, HTTP, URL, x509, XML veya
+      MIME isleyen kod yoluna ve disaridan gelen veriye maruz kalmaz. Veritabani yalnizca ic agda
+      (db_net, internal) ve salt okunur kok dosya sistemiyle, sinirli yeteneklerle calisir (Z-09).
+      Yeni postgres imaji yayimlaninca Dependabot ile guncellenecek; tarih dolunca tarama yeniden basarisiz olur (Z-08).
+    expired_at: 2026-12-31
+  - id: CVE-2026-56859
+    paths:
+      - "usr/local/bin/gosu"
+    statement: >-
+      postgres:16.16-alpine (en guncel 16.x imaji) icindeki gosu ikilisi Go 1.24.6 standart
+      kitapligiyla derlenmis. gosu yalnizca konteyner acilisinda giris betigi tarafindan bir kez
+      calistirilir (root -> postgres kullanicisina gecis + exec); TLS, HTTP, URL, x509, XML veya
+      MIME isleyen kod yoluna ve disaridan gelen veriye maruz kalmaz. Veritabani yalnizca ic agda
+      (db_net, internal) ve salt okunur kok dosya sistemiyle, sinirli yeteneklerle calisir (Z-09).
+      Yeni postgres imaji yayimlaninca Dependabot ile guncellenecek; tarih dolunca tarama yeniden basarisiz olur (Z-08).
+    expired_at: 2026-12-31
+  - id: CVE-2026-56860
+    paths:
+      - "usr/local/bin/gosu"
+    statement: >-
+      postgres:16.16-alpine (en guncel 16.x imaji) icindeki gosu ikilisi Go 1.24.6 standart
+      kitapligiyla derlenmis. gosu yalnizca konteyner acilisinda giris betigi tarafindan bir kez
+      calistirilir (root -> postgres kullanicisina gecis + exec); TLS, HTTP, URL, x509, XML veya
+      MIME isleyen kod yoluna ve disaridan gelen veriye maruz kalmaz. Veritabani yalnizca ic agda
+      (db_net, internal) ve salt okunur kok dosya sistemiyle, sinirli yeteneklerle calisir (Z-09).
+      Yeni postgres imaji yayimlaninca Dependabot ile guncellenecek; tarih dolunca tarama yeniden basarisiz olur (Z-08).
+    expired_at: 2026-12-31
+  - id: CVE-2026-56862
+    paths:
+      - "usr/local/bin/gosu"
+    statement: >-
+      postgres:16.16-alpine (en guncel 16.x imaji) icindeki gosu ikilisi Go 1.24.6 standart
+      kitapligiyla derlenmis. gosu yalnizca konteyner acilisinda giris betigi tarafindan bir kez
+      calistirilir (root -> postgres kullanicisina gecis + exec); TLS, HTTP, URL, x509, XML veya
+      MIME isleyen kod yoluna ve disaridan gelen veriye maruz kalmaz. Veritabani yalnizca ic agda
+      (db_net, internal) ve salt okunur kok dosya sistemiyle, sinirli yeteneklerle calisir (Z-09).
+      Yeni postgres imaji yayimlaninca Dependabot ile guncellenecek; tarih dolunca tarama yeniden basarisiz olur (Z-08).
+    expired_at: 2026-12-31
+  - id: CVE-2026-78667
+    paths:
+      - "usr/local/bin/gosu"
+    statement: >-
+      postgres:16.16-alpine (en guncel 16.x imaji) icindeki gosu ikilisi Go 1.24.6 standart
+      kitapligiyla derlenmis. gosu yalnizca konteyner acilisinda giris betigi tarafindan bir kez
+      calistirilir (root -> postgres kullanicisina gecis + exec); TLS, HTTP, URL, x509, XML veya
+      MIME isleyen kod yoluna ve disaridan gelen veriye maruz kalmaz. Veritabani yalnizca ic agda
+      (db_net, internal) ve salt okunur kok dosya sistemiyle, sinirli yeteneklerle calisir (Z-09).
+      Yeni postgres imaji yayimlaninca Dependabot ile guncellenecek; tarih dolunca tarama yeniden basarisiz olur (Z-08).
+    expired_at: 2026-12-31
+  - id: CVE-2026-78669
+    paths:
+      - "usr/local/bin/gosu"
+    statement: >-
+      postgres:16.16-alpine (en guncel 16.x imaji) icindeki gosu ikilisi Go 1.24.6 standart
+      kitapligiyla derlenmis. gosu yalnizca konteyner acilisinda giris betigi tarafindan bir kez
+      calistirilir (root -> postgres kullanicisina gecis + exec); TLS, HTTP, URL, x509, XML veya
+      MIME isleyen kod yoluna ve disaridan gelen veriye maruz kalmaz. Veritabani yalnizca ic agda
+      (db_net, internal) ve salt okunur kok dosya sistemiyle, sinirli yeteneklerle calisir (Z-09).
+      Yeni postgres imaji yayimlaninca Dependabot ile guncellenecek; tarih dolunca tarama yeniden basarisiz olur (Z-08).
+    expired_at: 2026-12-31
+  - id: CVE-2026-97031
+    paths:
+      - "usr/local/bin/gosu"
+    statement: >-
+      postgres:16.16-alpine (en guncel 16.x imaji) icindeki gosu ikilisi Go 1.24.6 standart
+      kitapligiyla derlenmis. gosu yalnizca konteyner acilisinda giris betigi tarafindan bir kez
+      calistirilir (root -> postgres kullanicisina gecis + exec); TLS, HTTP, URL, x509, XML veya
+      MIME isleyen kod yoluna ve disaridan gelen veriye maruz kalmaz. Veritabani yalnizca ic agda
+      (db_net, internal) ve salt okunur kok dosya sistemiyle, sinirli yeteneklerle calisir (Z-09).
+      Yeni postgres imaji yayimlaninca Dependabot ile guncellenecek; tarih dolunca tarama yeniden basarisiz olur (Z-08).
+    expired_at: 2026-12-31
+
+# E-16 (7. rapor): Go net/http MaxBytesReader — sinir asildiginda yanit basligi esgudumsuz yazilir, islem
+# cokebilir (11 Kasim 2026). Iki ayri ikili, iki ayri gerekce; kabuller KISA surelidir.
+  - id: CVE-2026-97054
+    paths:
+      - "usr/bin/caddy"
+    statement: >-
+      caddy:2.11.9 (Go 1.27.3; duzeltme Go 1.27.4 ile derlenmis yeni bir Caddy imaji gerektiriyor). Vekil
+      internete acik tek bilesendir ve request_body max_size etkilenen islevi kullanir; olasi etki vekil
+      surecinin cokmesi, yani kisa sureli hizmet kesintisidir (kap 'restart: unless-stopped' ile yeniden
+      baslar). Gizlilik ve butunluk etkisi yoktur. 7. rapordaki laboratuvar denemesinde sinir asan 58.000
+      istekle (parcali aktarim, ardisik istekler, Expect: 100-continue) cokme tetiklenemedi. Go 1.27.4+ ile
+      derlenmis Caddy imaji yayimlandiginda docker-compose.yml icindeki surum ve ozet guncellenmeli ve bu
+      kayit silinmelidir. Yeniden degerlendirme: en gec 2026-12-11.
+    expired_at: 2026-12-11
+  - id: CVE-2026-97054
+    paths:
+      - "usr/local/bin/gosu"
+    statement: >-
+      postgres:16.16-alpine (en guncel 16.x imaji) icindeki gosu ikilisi Go 1.24.6 standart
+      kitapligiyla derlenmis. gosu yalnizca konteyner acilisinda giris betigi tarafindan bir kez
+      calistirilir (root -> postgres kullanicisina gecis + exec); HTTP sunmaz, net/http kod yoluna ve
+      disaridan gelen veriye maruz kalmaz. Veritabani yalnizca ic agda (db_net, internal) ve salt okunur
+      kok dosya sistemiyle, sinirli yeteneklerle calisir (Z-09). Yeni postgres imaji yayimlaninca
+      guncellenecek; tarih dolunca tarama yeniden basarisiz olur (Z-08).
+    expired_at: 2026-12-31

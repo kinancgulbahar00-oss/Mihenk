@@ -1,19 +1,34 @@
+import hashlib
 from datetime import datetime, timezone
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean, Text, Float, JSON
+from sqlalchemy import Column, Index, Integer, String, DateTime, ForeignKey, Boolean, Text, Float, JSON
 from sqlalchemy.orm import relationship
 from backend.models.database import Base
 
 def utc_now():
     return datetime.now(timezone.utc)
 
+
+def value_digest(value: str) -> str:
+    """Gosterge degerinin SHA-256 ozeti. Dizin degerin kendisi yerine bu ozet uzerindedir (Z-02):
+    PostgreSQL B-agaci dizin satiri en fazla ~2,7 KB olabilir; uzun (yuzde kodlu) adresler
+    dizini asip kayit asamasinda hataya yol aciyordu."""
+    return hashlib.sha256((value or "").encode("utf-8")).hexdigest()
+
 class IOCModel(Base):
     __tablename__ = "iocs"
+    # Ayni gosterge icin tek kayit (A-11): eszamanli ilk analizler yinelenen satir olusturamaz
+    __table_args__ = (Index("ux_iocs_type_value_hash", "type", "value_hash", unique=True),)
 
     id = Column(Integer, primary_key=True, index=True)
     type = Column(String(50), nullable=False, index=True)
-    value = Column(String(2048), nullable=False, index=True)
+    value = Column(Text, nullable=False)
+    value_hash = Column(String(64), nullable=True, index=True)
+    # Kayitli karar (B-08): son PEAK_WINDOW_DAYS gundeki en yuksek analiz karari ya da analistin liste
+    # karari. Anonim yeniden analiz karari DUSUREMEZ; son analizin sonucu ayrica tutulur.
     risk_score = Column(Integer, default=0)
     risk_level = Column(String(20), default="LOW")
+    last_risk_score = Column(Integer, nullable=True)
+    last_risk_level = Column(String(20), nullable=True)
     first_seen = Column(DateTime, default=utc_now)
     created_at = Column(DateTime, default=utc_now)
 

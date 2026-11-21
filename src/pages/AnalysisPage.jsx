@@ -12,10 +12,10 @@ export function AnalysisPage({ state, onSearch, onRetry, tlp, onTlpChange }) {
   return (
     <div className="mx-auto w-full max-w-[1180px] px-4 py-8 sm:px-8 lg:py-10">
       <header className="no-print mb-6">
-        <h1 className="text-2xl font-semibold tracking-[-0.01em]">Gösterge analizi</h1>
+        <h1 className="text-2xl font-semibold tracking-[-0.01em]">Oltalama (phishing) bağlantısı ve alan adı analizi</h1>
         <p className="mt-1 max-w-[70ch] text-sm text-ink-2">
-          Şüpheli bir URL veya alan adı girin; Mihenk açık kaynak istihbarat sağlayıcılarını sorgular ve gerekçeli bir tehdit
-          brifingi üretir.
+          Şüpheli bir URL veya alan adı girin; Mihenk sayfayı ve açık kaynak istihbarat sağlayıcılarını inceler, gerekçeli
+          bir risk skoru ve tehdit brifingi üretir.
         </p>
       </header>
 

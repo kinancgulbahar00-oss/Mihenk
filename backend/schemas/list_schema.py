@@ -1,12 +1,12 @@
 from datetime import datetime
 from typing import Optional, Literal
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 class ListCreateRequest(BaseModel):
     list_type: Literal["whitelist", "blacklist"] = Field(..., description="'whitelist' veya 'blacklist'")
     entry_type: Literal["domain", "ip", "url"] = Field("domain", description="'domain', 'ip' veya 'url'")
-    pattern: str = Field(..., description="Eşleşecek alan adı, IP veya URL kalıbı (örn: google.com, 1.1.1.1)")
-    description: Optional[str] = Field(None, description="Kural açıklama / gerekçesi")
+    pattern: str = Field(..., min_length=1, max_length=1024, description="Eşleşecek alan adı, IP veya URL kalıbı (örn: google.com, 1.1.1.1)")
+    description: Optional[str] = Field(None, max_length=500, description="Kural açıklama / gerekçesi")
 
 class ListItemResponse(BaseModel):
     id: int
@@ -15,6 +15,8 @@ class ListItemResponse(BaseModel):
     pattern: str
     description: Optional[str] = None
     created_at: datetime
+    # Kural bugunku dogrulamadan gecmiyorsa (onceki surumlerde kaydedilmis 'com.tr' gibi) uygulanmaz;
+    # nedeni burada gosterilir (Z-05)
+    disabled_reason: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

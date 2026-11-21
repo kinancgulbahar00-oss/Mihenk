@@ -12,6 +12,13 @@ import { verdictOf, referenceOf, formatStamp } from './lib/verdict';
 import { loadRecent, pushRecent, clearRecent, loadTlp, saveTlp } from './lib/storage';
 import { useTheme } from './lib/theme';
 
+const PAGE_TITLES = {
+  analysis: 'Mihenk — Oltalama (Phishing) URL ve Alan Adı Analizi',
+  catalog: 'Kurum kataloğu — Mihenk',
+  rules: 'İzin ve engel listeleri — Mihenk',
+  admin: 'Yönetici paneli — Mihenk',
+};
+
 const EMPTY = { data: null, verdict: null, query: null, reference: '', stamp: '', loading: false, error: '' };
 
 export default function App() {
@@ -23,6 +30,11 @@ export default function App() {
   const [theme, setTheme] = useTheme();
   const [isAdmin, setIsAdmin] = useState(false);
 
+  // Her gorunumun kendi sayfa basligi olur (tarayici sekmesi, gecmis, yer imleri)
+  useEffect(() => {
+    document.title = PAGE_TITLES[route] || PAGE_TITLES.analysis;
+  }, [route]);
+
   useEffect(() => {
     adminVerify()
       .then((res) => setIsAdmin(res.valid === true))
@@ -33,7 +45,16 @@ export default function App() {
     if (route !== 'analysis') window.location.hash = ROUTES.analysis;
     setAnalysis((s) => ({ ...s, query, loading: true, error: '' }));
     try {
-      const data = await analyzeUrl(query);
+      let data = await analyzeUrl(query);
+      // Ayni sunucuya baska yoklamalar suruyorsa (B-04) birkac saniye sonra bir kez yeniden denenir
+      if (data?.ioc_details?.page_status === 'target_busy') {
+        await new Promise((resolve) => setTimeout(resolve, 4000));
+        try {
+          data = await analyzeUrl(query);
+        } catch {
+          /* ilk sonuc gosterilir */
+        }
+      }
       const now = new Date();
       const verdict = verdictOf(data);
       setAnalysis({

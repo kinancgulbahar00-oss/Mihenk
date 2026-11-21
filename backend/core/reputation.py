@@ -4,6 +4,7 @@ import time
 import requests
 
 from backend.config import settings
+from backend.core.cache import BoundedCache
 
 ABUSEIPDB_URL = "https://api.abuseipdb.com/api/v2/check"
 VIRUSTOTAL_URL = "https://www.virustotal.com/api/v3/urls/{url_id}"
@@ -15,7 +16,7 @@ STATUS_NO_KEY = "no_api_key"
 STATUS_NOT_FOUND = "not_found"
 STATUS_ERROR = "error"
 
-_cache = {}
+_cache = BoundedCache(maxsize=4096, max_age=CACHE_TTL_SECONDS)
 
 
 def _cached(key):

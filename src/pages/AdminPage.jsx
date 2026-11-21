@@ -23,7 +23,7 @@ import {
 import {
   adminLogin,
   adminVerify,
-  clearAdminToken,
+  adminLogout,
   fetchAdminStats,
   fetchLists,
   addListItem,
@@ -112,8 +112,9 @@ export function AdminPage({ onAdminStatusChange }) {
 
   // Login form states
   const [password, setPassword] = useState('');
+  const [otp, setOtp] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
+  const [rememberMe, setRememberMe] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
 
@@ -193,10 +194,11 @@ export function AdminPage({ onAdminStatusChange }) {
     setLoginLoading(true);
     setLoginError('');
     try {
-      await adminLogin(password.trim(), rememberMe);
+      await adminLogin(password.trim(), rememberMe, otp.trim());
       setIsAdmin(true);
       onAdminStatusChange?.(true);
       setPassword('');
+      setOtp('');
     } catch (err) {
       setLoginError(err.message || 'Giriş yapılamadı.');
     } finally {
@@ -204,8 +206,8 @@ export function AdminPage({ onAdminStatusChange }) {
     }
   };
 
-  const handleLogout = () => {
-    clearAdminToken();
+  const handleLogout = async () => {
+    await adminLogout();
     setIsAdmin(false);
     onAdminStatusChange?.(false);
     setStats(null);
@@ -360,6 +362,24 @@ export function AdminPage({ onAdminStatusChange }) {
                 </div>
               </div>
 
+              <div>
+                <label htmlFor="admin-otp" className="mb-1.5 block text-xs font-semibold text-ink">
+                  Doğrulama Kodu <span className="font-normal text-ink-3">(iki adımlı doğrulama etkinse)</span>
+                </label>
+                <input
+                  id="admin-otp"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9 ]*"
+                  maxLength={7}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  placeholder="6 haneli kod"
+                  autoComplete="one-time-code"
+                  className="field w-full tracking-widest"
+                />
+              </div>
+
               <div className="flex items-center text-xs text-ink-2">
                 <label className="flex cursor-pointer items-center gap-2 select-none">
                   <input
@@ -432,6 +452,43 @@ export function AdminPage({ onAdminStatusChange }) {
           Yönetici Çıkışı
         </button>
       </header>
+
+      {/* Fiili guvenlik durumu (D-04): ayarlar uygulamaya ulasmadiysa burada gorunur */}
+      {stats && (
+        <div
+          role={stats.second_factor_enabled ? undefined : 'alert'}
+          className={`mb-6 flex items-start gap-3 rounded border p-4 text-sm ${
+            stats.second_factor_enabled
+              ? 'border-line text-ink-2'
+              : 'border-risk-critical/40 bg-risk-critical/10 text-ink'
+          }`}
+        >
+          {stats.second_factor_enabled ? (
+            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-risk-low" />
+          ) : (
+            <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-risk-critical" />
+          )}
+          <div>
+            <p className="font-semibold">
+              {stats.second_factor_enabled
+                ? 'İkinci etken (TOTP) etkin.'
+                : 'İkinci etken KAPALI: panel yalnızca parolayla korunuyor.'}
+            </p>
+            <p className="mt-1 text-xs text-ink-3">
+              Güvenilen ağ aralığı: {stats.trusted_networks ?? 0}
+              {' · '}Panel yalnızca güvenilen ağlardan: {stats.restrict_to_trusted ? 'evet' : 'hayır'}
+              {' · '}Hatalı giriş sınırı: {stats.login_max_failures ?? '–'}
+              {' · '}Analiz sınırı: {stats.analyze_rate_per_minute ?? '–'}/dk
+            </p>
+            {!stats.second_factor_enabled && (
+              <p className="mt-1 text-xs text-ink-2">
+                .env dosyasına ADMIN_TOTP_SECRET yazdıysanız ayarın arka uca ulaşmadığını gösterir; servisi
+                yeniden başlatıp sunucu kaydındaki “security state” satırını denetleyin.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* System Metric Cards */}
       <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -666,7 +723,13 @@ export function AdminPage({ onAdminStatusChange }) {
                       </span>
                     </td>
                     <td className="font-mono break-all py-2.5 pr-3 text-xs font-semibold text-ink">
-                      {item.pattern}
+                      <span className={item.disabled_reason ? 'text-ink-3 line-through' : undefined}>{item.pattern}</span>
+                      {item.disabled_reason && (
+                        <span className="mt-1 flex items-start gap-1 font-sans text-2xs font-normal text-risk-critical">
+                          <AlertCircle className="mt-px h-3 w-3 shrink-0" />
+                          {item.disabled_reason}
+                        </span>
+                      )}
                     </td>
                     <td className="py-2.5 pr-3 text-xs text-ink-2">
                       {item.description || <span className="text-ink-3 italic">Açıklama belirtilmedi</span>}

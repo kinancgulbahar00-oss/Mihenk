@@ -1,0 +1,127 @@
+# Her derlemede guvenlik denetimleri (Y-04, F-13, Z-08):
+#  - backend test paketi
+#  - Python ve npm bagimlilik taramasi
+#  - Compose'daki tum imajlarin ozetle (@sha256) sabitlendiginin denetimi
+#  - Arka uc imaji ile vekil/veritabani imajlarinin Trivy taramasi
+#    (duzeltmesi yayimlanmis YUKSEK/KRITIK kayit varsa derleme basarisiz olur)
+#
+# Tedarik zinciri (Z-08): denetimi yapan araclar da uygulama bagimliliklari gibi sabitlidir.
+#  - GitHub eylemleri tam commit ozetiyle cagrilir (etiket degil); yorumdaki surum bilgi icindir.
+#  - Trivy imaji @sha256 ozetiyle cekilir ve Docker soketi BAGLANMADAN calisir: imaj `docker save`
+#    ile dosyaya yazilir, Trivy yalnizca bu dosyayi salt okunur gorur (--input).
+#  - pytest, pip-audit ve httpx ozetli gelistirme kilit dosyasindan kurulur.
+#  - Dependabot (github-actions, docker, pip, npm) bu sabitlemeleri de gunceller.
+name: security
+
+on:
+  push:
+  pull_request:
+  schedule:
+    # Her gun (E-16): yeni yayimlanan bir zafiyet imaj taramasini haftalarca fark edilmeden basarisiz
+    # birakmasin. Basarisiz calisma GitHub bildirimi uretir.
+    - cron: "0 5 * * *"
+    # Haftalik: katalog saglik denetimi (aga erisir)
+    - cron: "30 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  TRIVY_IMAGE: aquasec/trivy:0.76.2@sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb
+
+jobs:
+  tests-and-deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.11"
+      - name: Bagimliliklar (ozet dogrulamali)
+        run: pip install --require-hashes -r backend/requirements.txt -r backend/requirements-dev.txt
+      - name: Test paketi
+        run: python -m pytest backend/tests -q
+      - name: pip-audit
+        run: |
+          pip-audit -r backend/requirements.txt --require-hashes --strict
+          pip-audit -r backend/requirements-dev.txt --require-hashes --strict
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "22"
+      - name: npm audit
+        run: npm ci --no-fund && npm audit --audit-level=high
+
+  # Katalog saglik denetimi (B-07): her resmi alan adi kayitli mi, cozumleniyor mu, kaydi yakinda
+  # bitiyor mu? Aga erisir; yalnizca haftalik zamanlanmis calismada ve elle tetiklendiginde kosar.
+  catalog-health:
+    if: (github.event_name == 'schedule' && github.event.schedule == '30 5 * * 1') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.11"
+      - name: Bagimliliklar (ozet dogrulamali)
+        run: pip install --require-hashes -r backend/requirements.txt
+      - name: Katalogdaki resmi alan adlari
+        run: python -m backend.tools.catalog_health
+
+  images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Tum imajlar ozetle sabitli mi?
+        env:
+          POSTGRES_PASSWORD: ci-only-placeholder
+        run: |
+          images=$(docker compose config --images | grep -v '^mihenk-backend' || true)
+          echo "$images"
+          if echo "$images" | grep -v '@sha256:'; then
+            echo "::error::Ozetle sabitlenmemis imaj var (image: ad:surum@sha256:...)"; exit 1
+          fi
+          if grep -nE '^FROM [^@]+$' backend/Dockerfile; then
+            echo "::error::Dockerfile FROM satiri ozetle sabitlenmemis"; exit 1
+          fi
+          if grep -nE '^\s*-?\s*uses:\s*[^@]+@[^ ]{1,39}(\s|$)' .github/workflows/*.yml; then
+            echo "::error::Etiketle cagrilan eylem var (uses: sahip/eylem@<40 haneli commit ozeti>)"; exit 1
+          fi
+          if ! echo "$TRIVY_IMAGE" | grep -q '@sha256:'; then
+            echo "::error::Trivy imaji ozetle sabitlenmemis"; exit 1
+          fi
+      - name: Arka uc imajini derle
+        run: docker build -f backend/Dockerfile -t mihenk-backend:ci .
+      # Testler URETIM IMAJININ yorumlayicisi ve kitapliklariyla da calistirilir (7. rapor, E-01 / 7.7):
+      # gelistirme ortami ile uretim imaji farkli Python yama surumu kullandiginda davranis farki
+      # bugune kadar gorunmuyordu. Imaj test dosyalarini ve pytest'i icermez; depo salt okunur baglanir.
+      - name: Test paketi (uretim imajinin icinde)
+        run: |
+          docker run --rm -v "$PWD:/src:ro" -w /src -e PYTHONDONTWRITEBYTECODE=1 mihenk-backend:ci sh -c \
+            "pip install -q --no-cache-dir --target /tmp/dev --require-hashes -r backend/requirements-dev.txt \
+             && PYTHONPATH=/tmp/dev python -m pytest backend/tests -q -p no:cacheprovider"
+      - name: Trivy taramasi (Docker soketi baglanmadan)
+        env:
+          POSTGRES_PASSWORD: ci-only-placeholder
+        run: |
+          mkdir -p "$RUNNER_TEMP/images"
+          status=0
+          for image in mihenk-backend:ci $(docker compose config --images | grep '@sha256:'); do
+            echo "== $image"
+            docker pull -q "$image" >/dev/null 2>&1 || true
+            archive="$RUNNER_TEMP/images/scan.tar"
+            docker save -o "$archive" "$image"
+            docker run --rm \
+              -v "$archive:/scan/image.tar:ro" \
+              -v "$PWD/.trivyignore.yaml:/scan/trivyignore.yaml:ro" \
+              "$TRIVY_IMAGE" image --input /scan/image.tar \
+              --exit-code 1 --severity CRITICAL,HIGH --ignore-unfixed --no-progress \
+              --ignorefile /scan/trivyignore.yaml || status=1
+            rm -f "$archive"
+          done
+          exit $status

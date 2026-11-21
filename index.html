@@ -4,25 +4,91 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#121418" />
+    <title>Mihenk — Oltalama (Phishing) URL ve Alan Adı Analizi</title>
     <meta
       name="description"
-      content="Mihenk, URL ve alan adlarını açıklanabilir bir tehdit skoruyla değerlendiren ve TLP işaretli istihbarat brifingi üreten oltalama tehdit istihbaratı platformudur."
+      content="Şüpheli bir bağlantıyı ya da alan adını ücretsiz sorgulayın. Mihenk, sayfanın taklit ettiği kurumu, bilgi toplayan formları ve yönlendirme zincirini inceler; 0–100 arası gerekçeli bir risk skoru ve TLP işaretli tehdit istihbaratı brifingi üretir."
     />
-    <link rel="icon" type="image/jpeg" href="/docs/logo.jpg" />
-    <title>Mihenk</title>
-    <script>
-      (function () {
-        try {
-          var raw = localStorage.getItem('mihenk.theme');
-          var pref = raw ? JSON.parse(raw) : 'system';
-          var dark = pref === 'dark' || (pref !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
-          document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-        } catch (e) {}
-      })();
-    </script>
+    <!-- robots, canonical, og:url / og:image ve yapılandırılmış veri sunucuda eklenir (backend/core/seo.py):
+         PUBLIC_BASE_URL tanımlı değilse sayfa noindex olur. -->
+    <!--MIHENK_SEO_HEAD-->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Mihenk" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:title" content="Mihenk — Oltalama (Phishing) URL ve Alan Adı Analizi" />
+    <meta
+      property="og:description"
+      content="Şüpheli bağlantıyı sorgulayın: taklit edilen kurum, bilgi toplayan formlar ve yönlendirmeler incelenir; gerekçeli risk skoru ve TLP işaretli brifing üretilir."
+    />
+    <meta property="og:image:alt" content="Mihenk gösterge analizi ekranı: risk skoru ve gerekçeler" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Mihenk — Oltalama (Phishing) URL ve Alan Adı Analizi" />
+    <meta
+      name="twitter:description"
+      content="Şüpheli bağlantıyı sorgulayın: gerekçeli risk skoru ve TLP işaretli tehdit istihbaratı brifingi."
+    />
+    <link rel="icon" type="image/jpeg" href="/logo.jpg" />
+    <link rel="apple-touch-icon" href="/logo.jpg" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <script src="/theme-init.js"></script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- İlk HTML içeriği: JavaScript çalıştırmayan tarayıcılar (arama motorlarının ilk geçişi, yapay zekâ
+           tarayıcıları) sayfanın ne olduğunu buradan okur. Uygulama yüklendiğinde React bu içeriğin yerini alır. -->
+      <main class="mx-auto w-full max-w-[860px] px-4 py-10 text-ink">
+        <h1 class="text-3xl font-semibold tracking-tight">Mihenk: oltalama (phishing) bağlantısı ve alan adı analizi</h1>
+        <p class="mt-3 text-sm text-ink-2">
+          Mihenk, şüpheli bir URL ya da alan adını değerlendiren bir tehdit istihbaratı platformudur. SMS, e-posta ya da
+          sosyal medyayla gelen bir bağlantıyı yapıştırın; Mihenk sayfayı JavaScript çalıştırmadan indirir, taklit edilen
+          kurumu, bilgi toplayan formları ve yönlendirme zincirini inceler ve gerekçeleriyle birlikte 0–100 arası bir
+          risk skoru üretir.
+        </p>
+
+        <h2 class="mt-10 text-xl font-semibold">Nasıl çalışır?</h2>
+        <ol class="mt-3 list-decimal space-y-2 pl-5 text-sm text-ink-2">
+          <li>Şüpheli bağlantıyı ya da alan adını arama kutusuna girersiniz.</li>
+          <li>
+            Mihenk alan adını, kayıt yaşını, TLS sertifikasını, yönlendirme zincirini ve sayfa içeriğini inceler; açık
+            kaynak itibar servislerini sorgular.
+          </li>
+          <li>
+            Sonuç bir risk düzeyi (Düşük risk, Dikkat, Şüpheli, Zararlı ya da Karar verilemedi), 0–100 arası bir skor ve
+            skoru oluşturan her bulgunun açıklamasıyla gösterilir.
+          </li>
+          <li>İsterseniz sonucu TLP işaretli, yazdırılabilir bir tehdit istihbaratı brifingi olarak alırsınız.</li>
+        </ol>
+
+        <h2 class="mt-10 text-xl font-semibold">Neleri denetler?</h2>
+        <ul class="mt-3 list-disc space-y-2 pl-5 text-sm text-ink-2">
+          <li>Banka, kargo, e-ticaret ve kamu kurumlarını taklit eden alan adları ve sayfa içerikleri</li>
+          <li>Şifre, kart bilgisi ya da T.C. kimlik numarası isteyen formlar</li>
+          <li>Benzer harflerle (homograf) yazılmış ve sahte resmî uzantı taşıyan alan adları</li>
+          <li>Ara sayfalar, çerçeveler ve gecikmeli yönlendirmeler</li>
+          <li>Doğrudan dosya indiren adresler (APK, çalıştırılabilir dosya, arşiv)</li>
+          <li>Analist izin ve engel listeleri</li>
+        </ul>
+
+        <h2 class="mt-10 text-xl font-semibold">Sık sorulan sorular</h2>
+        <h3 class="mt-5 text-base font-semibold">Düşük skor, bağlantının güvenli olduğu anlamına gelir mi?</h3>
+        <p class="mt-1 text-sm text-ink-2">
+          Hayır. Düşük skor, denetlenen kuralların hiçbirinin tetiklenmediğini gösterir. Saldırgan, inceleme araçlarına
+          zararsız bir sayfa gösterebilir; bilgi girmeden önce adresi kurumun resmî adresiyle karşılaştırın.
+        </p>
+        <h3 class="mt-5 text-base font-semibold">“Karar verilemedi” ne demek?</h3>
+        <p class="mt-1 text-sm text-ink-2">
+          Mihenk bir tarayıcı değildir; sayfayı JavaScript çalıştırmadan inceler. İçeriği betikle üretilen, görselle
+          anlatılan ya da tam indirilemeyen sayfalarda “Düşük risk” yerine “Karar verilemedi” sonucu verilir.
+        </p>
+        <h3 class="mt-5 text-base font-semibold">Sorguladığım bağlantıya girmek gerekir mi?</h3>
+        <p class="mt-1 text-sm text-ink-2">
+          Hayır. Bağlantıyı açmadan kopyalayıp Mihenk'e yapıştırmanız yeterlidir; sayfayı sizin yerinize Mihenk indirir.
+        </p>
+        <noscript>
+          <p class="mt-8 text-sm font-semibold">Analiz aracını kullanmak için tarayıcınızda JavaScript'i etkinleştirin.</p>
+        </noscript>
+      </main>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

@@ -1,5 +1,5 @@
 {
- "_readme": "Mihenk marka katalogu. domains: resmi kayitli alan adlari (alt alan adlari otomatik resmi sayilir). aliases: URL'de aranacak ASCII ifadeler. weak_aliases: tek basina belirsiz ifadeler; yalnizca ayni sektorun tuzak kelimesiyle birlikte sayilir. terms: sayfa iceriginde aranacak gorunen adlar. gov: true ise .gov.tr gibi kisitli uzantilar da resmi sayilir.",
+ "_readme": "Mihenk marka katalogu. domains: resmi kayitli alan adlari (alt alan adlari otomatik resmi sayilir). aliases: URL'de aranacak ASCII ifadeler. weak_aliases: tek basina belirsiz ifadeler; yalnizca ayni sektorun tuzak kelimesiyle birlikte sayilir. terms: sayfa iceriginde aranacak gorunen adlar. gov: true ise .gov.tr gibi kisitli uzantilar da resmi sayilir. user_content_domains: kuruma ait OLAN ama icerigini kullanicilarin yayimladigi alanlar (blog, depolama, form, kisa baglanti). Sahiplik bilinir (alan adindaki marka adi taklit sayilmaz) ancak 'resmi alan adi' guveni verilmez ve sayfa icerigi her zaman incelenir (Z-01). Herkesin alt alan adi acabildigi sonekler (blogspot.com, s3.amazonaws.com...) ayrica backend/core/suffixes.py'de tanimlidir; domains listesine boyle bir alan EKLEMEYIN (test paketi denetler). trusted_hosts: kullanici icerigi barindiran buyuk platformlarda 'resmi alan adi' guveninin verildigi ADLAR (B-06); anahtar varsa listede olmayan alt alan adlari ve yollar resmi sayilmaz, yalnizca sahibi bilinir. Bos liste hicbir adin guvenilmedigi anlamina gelir; '*.ornek.com' alt alan adlarini kapsar. Her resmi alan adinin kayitli ve cozumlenir oldugu backend/tools/catalog_health.py ile denetlenir (B-07). user_content_paths: guvenilen bir adin ALTINDAKI kullanici icerigi yollari ('ad/yol-oneki'); bu yollarda resmi alan adi guveni verilmez (A-06).",
  "restricted_suffixes": [
   "gov.tr",
   "edu.tr",
@@ -12,6 +12,9 @@
   "dr.tr",
   "kep.tr"
  ],
+ "health_exceptions": {
+  "microsoftonline.com": "Kayitli (Microsoft); yalnizca alt alan adlari (login.microsoftonline.com) cozumlenir."
+ },
  "sectors": {
   "bank": {
    "label": "Banka",
@@ -417,8 +420,7 @@
     "garanti.com.tr",
     "bonus.com.tr",
     "garantibbvaemeklilik.com.tr",
-    "garantibbvayatirim.com.tr",
-    "garantibbvafiloleasing.com.tr"
+    "garantibbvayatirim.com.tr"
    ],
    "aliases": [
     "garantibbva",
@@ -525,8 +527,7 @@
    "sector": "bank",
    "domains": [
     "denizbank.com",
-    "denizbank.com.tr",
-    "fastpay.com.tr"
+    "denizbank.com.tr"
    ],
    "aliases": [
     "denizbank",
@@ -966,6 +967,18 @@
    ],
    "terms": [
     "paypal"
+   ],
+   "trusted_hosts": [
+    "paypal.com",
+    "www.paypal.com"
+   ],
+   "user_content_paths": [
+    "www.paypal.com/paypalme/",
+    "paypal.com/paypalme/",
+    "www.paypal.com/invoice/",
+    "www.paypal.com/donate",
+    "www.paypal.com/pools/",
+    "www.paypal.com/webapps/shoppingcart"
    ]
   },
   {
@@ -1352,8 +1365,7 @@
    "sector": "government",
    "gov": true,
    "domains": [
-    "kgm.gov.tr",
-    "hgs.com.tr"
+    "kgm.gov.tr"
    ],
    "aliases": [
     "hgs",
@@ -1838,8 +1850,7 @@
    "gov": true,
    "domains": [
     "ibb.istanbul",
-    "ibb.gov.tr",
-    "istanbul.istanbul"
+    "ibb.gov.tr"
    ],
    "aliases": [
     "ibb",
@@ -1982,8 +1993,7 @@
    "name": "Aras Kargo",
    "sector": "cargo",
    "domains": [
-    "araskargo.com.tr",
-    "araskargo.com"
+    "araskargo.com.tr"
    ],
    "aliases": [
     "araskargo",
@@ -2081,15 +2091,17 @@
    "id": "sendeo",
    "name": "Sendeo",
    "sector": "cargo",
-   "domains": [
-    "sendeo.com.tr"
-   ],
+   "domains": [],
    "aliases": [
     "sendeo"
    ],
    "terms": [
     "sendeo"
-   ]
+   ],
+   "domains_unverified": [
+    "sendeo.com.tr"
+   ],
+   "note": "B-07: sendeo.com.tr 2026-11 itibariyla cozumlenmiyor ve kayit durumu dogrulanamadi; resmi adres dogrulanana kadar katalogda resmi alan adi yok."
   },
   {
    "id": "ups",
@@ -2208,8 +2220,12 @@
    "domains": [
     "amazon.com.tr",
     "amazon.com",
-    "amazon.de",
-    "amazonaws.com"
+    "amazon.de"
+   ],
+   "user_content_domains": [
+    "amazonaws.com",
+    "cloudfront.net",
+    "amplifyapp.com"
    ],
    "aliases": [
     "amazon"
@@ -2259,6 +2275,9 @@
    ],
    "terms": [
     "sahibinden.com"
+   ],
+   "trusted_hosts": [
+    "secure.sahibinden.com"
    ]
   },
   {
@@ -2290,7 +2309,8 @@
    ],
    "terms": [
     "letgo"
-   ]
+   ],
+   "trusted_hosts": []
   },
   {
    "id": "dolap",
@@ -2364,7 +2384,7 @@
    "sector": "ecommerce",
    "domains": [
     "sokmarket.com.tr",
-    "cepte-sok.com"
+    "ceptesok.com"
    ],
    "aliases": [
     "sokmarket",
@@ -2641,8 +2661,7 @@
     "bip.com",
     "fizy.com",
     "tvplus.com.tr",
-    "superonline.net",
-    "dergilik.com.tr"
+    "superonline.net"
    ],
    "aliases": [
     "turkcell",
@@ -2771,8 +2790,7 @@
    "domains": [
     "ckenerji.com.tr",
     "ckbogazici.com.tr",
-    "ckakdeniz.com.tr",
-    "ckuludag.com.tr"
+    "ckakdeniz.com.tr"
    ],
    "aliases": [
     "ckenerji",
@@ -3408,8 +3426,7 @@
    "name": "Togg",
    "sector": "automotive",
    "domains": [
-    "togg.com.tr",
-    "trumore.com"
+    "togg.com.tr"
    ],
    "aliases": [
     "togg"
@@ -3427,11 +3444,21 @@
     "google.com.tr",
     "gmail.com",
     "youtube.com",
-    "googleusercontent.com",
-    "gstatic.com",
-    "googleapis.com",
+    "gstatic.com"
+   ],
+   "user_content_domains": [
     "blogspot.com",
-    "withgoogle.com"
+    "googleusercontent.com",
+    "googleapis.com",
+    "withgoogle.com",
+    "sites.google.com",
+    "docs.google.com",
+    "drive.google.com",
+    "script.google.com",
+    "forms.gle",
+    "appspot.com",
+    "firebaseapp.com",
+    "web.app"
    ],
    "aliases": [
     "google",
@@ -3440,6 +3467,31 @@
    "terms": [
     "google hesabı",
     "gmail"
+   ],
+   "trusted_hosts": [
+    "google.com",
+    "www.google.com",
+    "google.com.tr",
+    "www.google.com.tr",
+    "accounts.google.com",
+    "myaccount.google.com",
+    "mail.google.com",
+    "gmail.com",
+    "www.gmail.com",
+    "gstatic.com",
+    "*.gstatic.com"
+   ],
+   "user_content_paths": [
+    "www.google.com/maps/d/",
+    "google.com/maps/d/",
+    "www.google.com/url",
+    "google.com/url",
+    "www.google.com/amp/",
+    "google.com/amp/",
+    "www.google.com/imgres",
+    "www.google.com/travel/clk",
+    "www.google.com.tr/url",
+    "www.google.com.tr/amp/"
    ]
   },
   {
@@ -3447,9 +3499,10 @@
    "name": "YouTube",
    "sector": "digital",
    "domains": [
-    "youtube.com",
-    "youtu.be",
-    "google.com"
+    "youtube.com"
+   ],
+   "user_content_domains": [
+    "youtu.be"
    ],
    "aliases": [
     "youtube"
@@ -3467,12 +3520,23 @@
     "microsoftonline.com",
     "outlook.com",
     "office365.com",
-    "sharepoint.com",
-    "onedrive.com",
     "hotmail.com",
     "msn.com",
+    "login.windows.net"
+   ],
+   "user_content_domains": [
+    "sharepoint.com",
+    "onedrive.com",
     "azure.com",
-    "windows.net"
+    "windows.net",
+    "onedrive.live.com",
+    "1drv.ms",
+    "forms.office.com",
+    "forms.microsoft.com",
+    "sway.office.com",
+    "sway.cloud.microsoft",
+    "azurewebsites.net",
+    "blob.core.windows.net"
    ],
    "aliases": [
     "microsoft",
@@ -3488,6 +3552,26 @@
    ],
    "weak_aliases": [
     "outlook"
+   ],
+   "trusted_hosts": [
+    "microsoft.com",
+    "www.microsoft.com",
+    "account.microsoft.com",
+    "login.microsoftonline.com",
+    "login.live.com",
+    "account.live.com",
+    "outlook.live.com",
+    "outlook.office.com",
+    "outlook.office365.com",
+    "login.windows.net"
+   ],
+   "user_content_paths": [
+    "outlook.office.com/book/",
+    "outlook.office.com/bookwithme/",
+    "outlook.office.com/owa/calendar/",
+    "outlook.office365.com/book/",
+    "outlook.office365.com/owa/calendar/",
+    "outlook.live.com/owa/calendar/"
    ]
   },
   {
@@ -3511,6 +3595,13 @@
     "apple kimliği",
     "apple id",
     "icloud"
+   ],
+   "trusted_hosts": [
+    "apple.com",
+    "www.apple.com",
+    "appleid.apple.com",
+    "idmsa.apple.com",
+    "support.apple.com"
    ]
   },
   {
@@ -3522,8 +3613,10 @@
     "fb.com",
     "meta.com",
     "messenger.com",
-    "fb.me",
     "metastatus.com"
+   ],
+   "user_content_domains": [
+    "fb.me"
    ],
    "aliases": [
     "facebook",
@@ -3537,6 +3630,13 @@
    "terms": [
     "facebook",
     "meta business"
+   ],
+   "trusted_hosts": [
+    "meta.com",
+    "www.meta.com",
+    "about.meta.com",
+    "metastatus.com",
+    "www.metastatus.com"
    ]
   },
   {
@@ -3555,7 +3655,8 @@
    ],
    "terms": [
     "instagram"
-   ]
+   ],
+   "trusted_hosts": []
   },
   {
    "id": "whatsapp",
@@ -3563,7 +3664,9 @@
    "sector": "digital",
    "domains": [
     "whatsapp.com",
-    "whatsapp.net",
+    "whatsapp.net"
+   ],
+   "user_content_domains": [
     "wa.me"
    ],
    "aliases": [
@@ -3573,6 +3676,11 @@
    ],
    "terms": [
     "whatsapp"
+   ],
+   "trusted_hosts": [
+    "whatsapp.com",
+    "www.whatsapp.com",
+    "web.whatsapp.com"
    ]
   },
   {
@@ -3580,7 +3688,9 @@
    "name": "Telegram",
    "sector": "digital",
    "domains": [
-    "telegram.org",
+    "telegram.org"
+   ],
+   "user_content_domains": [
     "t.me",
     "telegram.me"
    ],
@@ -3595,13 +3705,16 @@
    "sector": "digital",
    "domains": [
     "x.com",
-    "twitter.com",
+    "twitter.com"
+   ],
+   "user_content_domains": [
     "t.co"
    ],
    "aliases": [
     "twitter"
    ],
-   "terms": []
+   "terms": [],
+   "trusted_hosts": []
   },
   {
    "id": "tiktok",
@@ -3613,29 +3726,35 @@
    "aliases": [
     "tiktok"
    ],
-   "terms": []
+   "terms": [],
+   "trusted_hosts": []
   },
   {
    "id": "linkedin",
    "name": "LinkedIn",
    "sector": "digital",
    "domains": [
-    "linkedin.com",
+    "linkedin.com"
+   ],
+   "user_content_domains": [
     "lnkd.in"
    ],
    "aliases": [
     "linkedin"
    ],
-   "terms": []
+   "terms": [],
+   "trusted_hosts": []
   },
   {
    "id": "discord",
    "name": "Discord",
    "sector": "digital",
    "domains": [
-    "discord.com",
-    "discord.gg",
-    "discordapp.com"
+    "discord.com"
+   ],
+   "user_content_domains": [
+    "discordapp.com",
+    "discord.gg"
    ],
    "aliases": [
     "discord",
@@ -3644,7 +3763,8 @@
    ],
    "terms": [
     "discord nitro"
-   ]
+   ],
+   "trusted_hosts": []
   },
   {
    "id": "steam",
@@ -3652,8 +3772,10 @@
    "sector": "digital",
    "domains": [
     "steampowered.com",
-    "steamcommunity.com",
     "steamgames.com"
+   ],
+   "user_content_domains": [
+    "steamcommunity.com"
    ],
    "aliases": [
     "steamcommunity",
@@ -3746,7 +3868,8 @@
    ],
    "terms": [
     "robux"
-   ]
+   ],
+   "trusted_hosts": []
   },
   {
    "id": "netflix",
@@ -3849,10 +3972,15 @@
    "domains": [
     "dropbox.com"
    ],
+   "user_content_domains": [
+    "dropboxusercontent.com",
+    "paper.dropbox.com"
+   ],
    "aliases": [
     "dropbox"
    ],
-   "terms": []
+   "terms": [],
+   "trusted_hosts": []
   },
   {
    "id": "docusign",
@@ -3876,10 +4004,21 @@
    "domains": [
     "adobe.com"
    ],
+   "user_content_domains": [
+    "express.adobe.com",
+    "spark.adobe.com"
+   ],
    "aliases": [
     "adobe"
    ],
-   "terms": []
+   "terms": [],
+   "trusted_hosts": [
+    "adobe.com",
+    "www.adobe.com",
+    "account.adobe.com",
+    "auth.services.adobe.com",
+    "helpx.adobe.com"
+   ]
   }
  ]
 }

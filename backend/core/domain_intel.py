@@ -5,14 +5,22 @@ from datetime import datetime, timezone
 
 import requests
 
+from backend.core.cache import BoundedCache
+from backend.core.netguard import (
+    DEGRADED_TLS_BUDGET_SECONDS, MIN_HOP_SECONDS, BlockedAddressError, Deadline, TargetBusyError, connect_pinned,
+    current_probe_context, resolve_public, targets, tls_budget,
+)
+from backend.core.suffixes import icann_registrable_domain, registrable_domain
+
 RDAP_BOOTSTRAP_URL = "https://rdap.org/domain/{domain}"
 IANA_WHOIS_HOST = "whois.iana.org"
 LOOKUP_TIMEOUT = 5
 LOOKUP_BUDGET_SECONDS = 8
+WHOIS_MAX_BYTES = 256 * 1024
 CACHE_TTL_SECONDS = 6 * 60 * 60
 UNKNOWN_CACHE_TTL_SECONDS = 10 * 60
 
-_cache = {}
+_cache = BoundedCache(maxsize=4096, max_age=CACHE_TTL_SECONDS)
 
 _DATE_PATTERNS = (
     "%Y-%m-%dT%H:%M:%S.%f%z",
@@ -134,14 +142,21 @@ def _rdap_lookup(domain):
 
 
 def _whois_query(host, query):
-    with socket.create_connection((host, 43), timeout=LOOKUP_TIMEOUT) as sock:
+    deadline = time.monotonic() + LOOKUP_BUDGET_SECONDS
+    with socket.create_connection((host, 43), timeout=LOOKUP_TIMEOUT) as sock, \
+            Deadline(LOOKUP_BUDGET_SECONDS) as watchdog:
+        watchdog.watch(sock)
         sock.sendall((query + "\r\n").encode("utf-8", errors="ignore"))
         chunks = []
-        while True:
+        total = 0
+        while time.monotonic() < deadline:
             chunk = sock.recv(4096)
             if not chunk:
                 break
             chunks.append(chunk)
+            total += len(chunk)
+            if total >= WHOIS_MAX_BYTES:
+                break
     return b"".join(chunks).decode("utf-8", errors="ignore")
 
 
@@ -220,7 +235,9 @@ def lookup_domain_registration(domain):
     if not domain:
         return dict(UNKNOWN_REGISTRATION)
 
-    key = domain.lower()
+    # Onbellek ve sorgu kayit kurumundaki alan adiyla yapilir (D-06): rastgele alt alan adlariyla
+    # ('a1.duckdns.org', 'a2.duckdns.org') gonderilen her istek RDAP/WHOIS'e yeni sorgu uretmez.
+    key = icann_registrable_domain(domain.lower().rstrip("."))
     cached = _cache.get(key)
     if cached:
         age_of_entry = time.time() - cached[0]
@@ -230,7 +247,7 @@ def lookup_domain_registration(domain):
 
     deadline = time.monotonic() + LOOKUP_BUDGET_SECONDS
     result = None
-    for candidate in _candidate_domains(key):
+    for candidate in _candidate_domains(key)[:1]:
         if time.monotonic() >= deadline:
             break
         result = _rdap_lookup(candidate)
@@ -250,26 +267,32 @@ def lookup_domain_registration(domain):
 
 
 def resolve_ip(domain):
+    """Alan adini cozumler ve herkese acik oldugunu dogrular.
+    Ic ag adresine cozumlenirse BlockedAddressError firlatir (sonuc onbellege alinmaz).
+    DNS rebinding'e karsi bu IP sonraki tum baglantilarda sabit kullanilir; bu yuzden
+    sonuc yalnizca kisa sure onbellekte tutulur."""
     if not domain:
         return None
     key = f"ip:{domain.lower()}"
     cached = _cache.get(key)
-    if cached and time.time() - cached[0] < CACHE_TTL_SECONDS:
+    if cached and time.time() - cached[0] < IP_CACHE_TTL_SECONDS:
         return cached[1]
-    try:
-        socket.setdefaulttimeout(LOOKUP_TIMEOUT)
-        address = socket.gethostbyname(domain)
-    except (OSError, UnicodeError):
-        address = None
+    address = resolve_public(domain, timeout=LOOKUP_TIMEOUT)
     _cache[key] = (time.time(), address)
     return address
 
 
+IP_CACHE_TTL_SECONDS = 5 * 60
+
+
 TLS_TIMEOUT = 4
+# El sikismasinin tamami icin kesin ust sinir (soket zaman asimi her okumada yeniden baslar; Y-02)
+TLS_BUDGET_SECONDS = 6
 
 
-def probe_tls(host):
-    """443 portunda TLS el sikismasi dener.
+def probe_tls(host, ip=None):
+    """443 portunda TLS el sikismasi dener. Baglanti yalnizca onceden dogrulanmis,
+    herkese acik `ip` adresine yapilir (SNI ve sertifika dogrulamasi `host` ile).
 
     'valid'   : HTTPS var ve sertifika dogrulandi
     'invalid' : HTTPS var ama sertifika dogrulanamadi
@@ -277,26 +300,67 @@ def probe_tls(host):
     """
     import ssl
 
-    if not host:
+    if not host or not ip:
         return "none"
-    key = f"tls:{host.lower()}"
+    # Sayfa yoklamasinda veya onceki TLS yoklamasinda sure butcesini asan hedef yeniden
+    # beklenmez (Z-04): yolu degistirilen her istek yeni bir 6 saniyelik bekleme baslatamaz
+    # Karantina anahtari tam addir (B-04): platformdaki yavas bir ad ayni alan adindaki digerlerini kapatmaz
+    target = registrable_domain(host)
+    scope = host.lower()
+    if targets.is_slow(target, scope=scope):
+        return "unreachable"
+    key = f"tls:{host.lower()}:{ip}"
     cached = _cache.get(key)
     if cached and time.time() - cached[0] < UNKNOWN_CACHE_TTL_SECONDS:
         return cached[1]
 
+    from backend.core.page_probe import is_protected_target
+
+    protected = is_protected_target(host)
     status = "none"
+    # Butce istemciye ve yuke gore kisalabilir (D-03); varsayilan TLS_BUDGET_SECONDS
+    budget = min(TLS_BUDGET_SECONDS, tls_budget())
+    held = None
+    if not protected and targets.ip_degraded(ip):
+        # Kisitli IP (B-05): adlar incelenir, ancak kisa butceyle ve IP siniri icinde, beklemeden
+        budget = min(budget, DEGRADED_TLS_BUDGET_SECONDS)
+        try:
+            held = targets.acquire_ip(ip, wait=0.0)
+        except TargetBusyError:
+            return "unreachable"
+    started = time.monotonic()
+    watchdog = Deadline(budget)
     try:
-        with socket.create_connection((host, 443), timeout=TLS_TIMEOUT) as sock:
+        with watchdog, connect_pinned(ip, 443, TLS_TIMEOUT) as sock:
             context = ssl.create_default_context()
             try:
-                with context.wrap_socket(sock, server_hostname=host):
+                # El sikismasi ayri yapilir: yavas el sikismasi bekci tarafindan kesilebilsin
+                with context.wrap_socket(sock, server_hostname=host, do_handshake_on_connect=False) as ssock:
+                    watchdog.watch(ssock)
+                    ssock.do_handshake()
                     status = "valid"
             except ssl.SSLCertVerificationError:
                 status = "invalid"
-            except (ssl.SSLError, OSError):
+            except (ssl.SSLError, OSError, ValueError):
                 status = "none"
-    except (OSError, UnicodeError):
+    except (OSError, UnicodeError, BlockedAddressError):
         status = "none"
+    finally:
+        if held is not None:
+            held.__exit__(None, None, None)
 
+    if watchdog.expired:
+        # El sikismasi butceyi asti (Z-04). Zaman asimi istemciye yazilir (D-03); hedef ancak
+        # en az MIN_HOP_SECONDS beklendiyse yavas sayilir, katalogdaki kurum adresi tek zaman
+        # asimiyla karantinaya alinmaz (D-02).
+        ctx = current_probe_context()
+        if ctx:
+            ctx.record_timeout(target)
+        if budget >= MIN_HOP_SECONDS and time.monotonic() - started >= MIN_HOP_SECONDS - 0.05:
+            targets.record_timeout(target, ip=ip, client=ctx.client if ctx else None,
+                                   protected=protected, scope=scope)
+        status = "unreachable"
+        # Kisa butceyle alinan sonuc onbellege yazilmaz
+        return status
     _cache[key] = (time.time(), status)
     return status

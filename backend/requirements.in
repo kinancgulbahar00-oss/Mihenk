@@ -1,0 +1,23 @@
+# Dogrudan bagimliliklar. Kilit dosyasini (requirements.txt) yeniden uretmek icin:
+#   uv pip compile backend/requirements.in --generate-hashes --python-version 3.11 \
+#     --python-platform linux -o backend/requirements.txt
+fastapi
+uvicorn[standard]
+sqlalchemy>=2.0
+pydantic>=2.0
+pydantic-settings>=2.0
+python-dotenv
+requests
+# UTS-46 alan adi kanonikleştirmesi (backend/core/hostnames.py); kilit dosyasinda zaten sabitli
+idna>=3.7
+psycopg2-binary
+# Sayfa incelemesi: tarayiciyi taklit eden ev yapimi kod yerine standart uyumlu kitapliklar (7. rapor, 7.1)
+# HTML5 agac kurucusu (Lexbor); isci surecte calisir (backend/sandbox)
+selectolax
+# WHATWG URL (Ada): sayfadan gelen adreslerin cozumlenmesi (backend/core/urls.py)
+ada-url
+# WHATWG Encoding Standard etiket tablosu
+webencodings
+# Chrome'un HTTPS'te bildirdigi icerik kodlamalari (E-06). Brotli 1.2+: acilan boyut sinirlanabilir
+brotli>=1.2
+zstandard

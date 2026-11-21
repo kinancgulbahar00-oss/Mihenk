@@ -85,10 +85,27 @@ const PAGE_STATUS = {
   unreachable: 'Sunucuya erişilemedi',
   too_many_redirects: 'Çok fazla yönlendirme',
   disabled: 'Sayfa analizi kapalı',
+  port_not_allowed: 'Standart dışı port, indirilmedi',
+  target_busy: 'Aynı sunucuya başka yoklama sürüyor, indirilmedi',
+  slow_target: 'Sunucu süre sınırını aştı, yeniden indirilmedi',
+  not_html: 'Yanıt HTML olarak işlenemedi, incelenmedi',
+  empty: 'Sunucu boş sayfa döndürdü',
+  download: 'Adres dosya indiriyor',
 };
 
 function pageRows(ioc, listMatch) {
   if (listMatch) return [{ source: 'Sayfa', label: 'İçerik', value: null, missing: 'Liste eşleşmesi' }];
+  if (ioc.page_status === 'download' && ioc.download) {
+    const d = ioc.download;
+    const rows = [{
+      source: 'Sayfa',
+      label: 'İndirilen dosya',
+      value: [d.kind, d.filename].filter(Boolean).join(' · '),
+      flag: { severity: d.risk === 'high' ? 'high' : 'medium', text: 'Dosya indirme' },
+    }];
+    if (d.sha256) rows.push({ source: 'Sayfa', label: 'SHA-256', value: d.sha256, mono: true });
+    return rows;
+  }
   if (ioc.page_status && ioc.page_status !== 'ok') {
     return [{ source: 'Sayfa', label: 'İçerik', value: null, missing: PAGE_STATUS[ioc.page_status] || 'Veri yok' }];
   }
@@ -120,7 +137,11 @@ function httpsRow(ioc, listMatch) {
   return { value: 'Yok', flag: { severity: 'medium', text: 'Şifresiz' } };
 }
 
-const PAGE_SHORT = { blocked: 'Engellendi', error: 'Yüklenemedi', unreachable: 'Erişilemedi', disabled: 'Kapalı' };
+const PAGE_SHORT = {
+  blocked: 'Engellendi', error: 'Yüklenemedi', unreachable: 'Erişilemedi', disabled: 'Kapalı',
+  port_not_allowed: 'Port dışı', too_many_redirects: 'Çok yönlendirme', target_busy: 'Meşgul', slow_target: 'Yavaş sunucu',
+  not_html: 'HTML değil', empty: 'Boş sayfa', download: 'Dosya', partial: 'Betikle üretiliyor',
+};
 
 // Kaynak kapsami: hangi saglayici yanit verdi
 export function coverageOf(ioc = {}, listMatch) {
@@ -129,7 +150,12 @@ export function coverageOf(ioc = {}, listMatch) {
     { name: 'DNS', ok: !!ioc.ip_address, status: 'error' },
     { name: 'AbuseIPDB', ok: ioc.abuse_score != null, status: ioc.abuse_status },
     { name: 'VirusTotal', ok: ioc.vt_positives != null, status: ioc.vt_status },
-    { name: 'Sayfa içeriği', ok: ioc.page_status === 'ok', status: ioc.page_status, page: true },
+    {
+      name: 'Sayfa içeriği',
+      ok: ioc.page_status === 'ok' && ioc.inspection_coverage !== 'partial',
+      status: ioc.page_status === 'ok' && ioc.inspection_coverage === 'partial' ? 'partial' : ioc.page_status,
+      page: true,
+    },
   ];
   return sources.map((s) => ({
     name: s.name,

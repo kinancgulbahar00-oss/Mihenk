@@ -4,15 +4,17 @@ from sqlalchemy.orm import Session
 from backend.models.database import get_db
 from backend.models.ioc_model import IOCModel, AnalysisResultModel
 from backend.schemas.analyze_schema import IOCResponse, IOCDetails, RelatedDomain, MitreTechnique
+from backend.api.routes_auth import require_admin
 
-router = APIRouter(prefix="/ioc", tags=["IOC"])
+# Analiz kayitlari (incelenen adresler) yalnizca yoneticiye aciktir
+router = APIRouter(prefix="/ioc", tags=["IOC"], dependencies=[Depends(require_admin)])
 
 @router.get("/{ioc_id}", response_model=IOCResponse, status_code=status.HTTP_200_OK,
             summary="Tek bir IOC kaydını ve son analiz sonucunu getirir")
 def get_ioc_by_id(ioc_id: int, db: Session = Depends(get_db)):
     ioc = db.query(IOCModel).filter(IOCModel.id == ioc_id).first()
     if not ioc:
-        raise HTTPException(status_code=404, detail=f"ID: {ioc_id} ile eşleşen IOC bulunamadı.")
+        raise HTTPException(status_code=404, detail="IOC bulunamadı.")
 
     latest_analysis = (
         db.query(AnalysisResultModel)
@@ -62,6 +64,8 @@ def get_ioc_by_id(ioc_id: int, db: Session = Depends(get_db)):
         value=ioc.value,
         risk_score=ioc.risk_score,
         risk_level=ioc.risk_level,
+        last_risk_score=ioc.last_risk_score,
+        last_risk_level=ioc.last_risk_level,
         first_seen=ioc.first_seen.isoformat() if ioc.first_seen else "",
         ioc_details=ioc_det,
         mitre_techniques=mitre_techs,
@@ -73,7 +77,7 @@ def get_ioc_by_id(ioc_id: int, db: Session = Depends(get_db)):
 def get_related_domains_by_ioc_id(ioc_id: int, db: Session = Depends(get_db)):
     ioc = db.query(IOCModel).filter(IOCModel.id == ioc_id).first()
     if not ioc:
-        raise HTTPException(status_code=404, detail=f"ID: {ioc_id} ile eşleşen IOC bulunamadı.")
+        raise HTTPException(status_code=404, detail="IOC bulunamadı.")
 
     latest_analysis = (
         db.query(AnalysisResultModel)

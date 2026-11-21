@@ -34,6 +34,11 @@ const VERDICTS = {
   medium: { word: 'Dikkat', sentence: 'oltalama amaçlı olabilir; ek doğrulama önerilir' },
   low: { word: 'Düşük risk', sentence: 'için bilinen bir oltalama göstergesi saptanmadı' },
   safe: { word: 'İzinli', sentence: 'analist izin listesinde yer alıyor; harici sorgular atlandı' },
+  // Sayfa icerigi incelenemedi (B-01, B-02): skor dusuk olsa da "Dusuk risk" denmez
+  undetermined: {
+    word: 'Karar verilemedi',
+    sentence: 'için sayfa içeriği incelenemedi; sonuç yalnızca adres ve kayıt bilgilerine dayanıyor, bağlantıyı açmadan önce doğrulayın',
+  },
 };
 
 export function verdictOf(data) {
@@ -41,7 +46,13 @@ export function verdictOf(data) {
   if (level === 'safe') return { key: 'low', ...VERDICTS.safe, listMatch: 'whitelist' };
   const key = bandOf(data?.risk_score).key;
   const listMatch = data?.ioc_details?.abuse_status === 'blacklisted' ? 'blacklist' : null;
-  return { key, ...VERDICTS[key], listMatch };
+  // Karar sunucuda uretilir (A-13): risk_level UNKNOWN ise "Karar verilemedi". Eski surum yanitlari icin
+  // kapsam alanina da bakilir.
+  const coverage = data?.ioc_details?.inspection_coverage;
+  if (!listMatch && (level === 'unknown' || (key === 'low' && level !== 'low' && (coverage === 'partial' || coverage === 'none')))) {
+    return { key: 'unknown', band: key, ...VERDICTS.undetermined, listMatch, undetermined: true };
+  }
+  return { key, band: key, ...VERDICTS[key], listMatch };
 }
 
 // Kayit numarasi: backend IOC kimligi varsa ondan, yoksa zaman damgasindan

@@ -1,0 +1,46 @@
+# TLS sonlandiran ters vekil. HTTP istekleri otomatik olarak HTTPS'e yonlendirilir.
+
+# Genel sunucu sinirlari (B-03). Basligini ya da govdesini yavas gonderen (yarim birakilmis) istekler
+# en gec 10 saniyede kapatilir; boylece tek bir istemci binlerce acik istekle vekilin bellegini
+# dolduramaz. En buyuk mesru istek birkac kilobayttir; analiz yaniti en fazla 45 saniye surer.
+# Istemci basina BAGLANTI sayisi Caddy'nin temel surumunde sinirlanamaz: ana makinenin guvenlik
+# duvarinda (deploy/README.md: iptables connlimit) ya da onune konacak bir CDN/WAF ile uygulayin.
+{
+	servers {
+		timeouts {
+			read_header 10s
+			read_body 10s
+			write 60s
+			idle 60s
+		}
+		max_header_size 16KB
+	}
+}
+
+{$SITE_ADDRESS:localhost} {
+	# Istek govdesi siniri (Y-03). Uygulamanin en buyuk mesru istegi birkac kilobayttir;
+	# siniri asan istek arka uca ulasmadan 413 alir.
+	request_body {
+		max_size {$MAX_REQUEST_BODY:16KB}
+	}
+
+	encode gzip
+
+	header {
+		-Server
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	}
+
+	# Caddy, istemciden gelen X-Forwarded-* basliklarina guvenmez (trusted_proxies tanimsiz)
+	# ve bunlari gercek istemci adresiyle yeniden yazar. Arka uc yalnizca bu vekile guvenir.
+	reverse_proxy backend:8000 {
+		# Istek govdesi vekilde TAMPONLANIR (A-07): govde tamamlanmadan arka uca baglanilmaz; govdesi yarim
+		# birakilan istek arka uctaki baglanti ve eszamanlilik sinirini tutamaz. En buyuk mesru istek 16 KB'tir.
+		request_buffers {$MAX_REQUEST_BODY:16KB}
+		# Arka uca baglanma ve yanit basligini bekleme suresi sinirli (B-03)
+		transport http {
+			dial_timeout 5s
+			response_header_timeout 60s
+		}
+	}
+}

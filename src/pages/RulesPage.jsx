@@ -97,6 +97,13 @@ export function RulesPage({ onChanged, isAdmin: propIsAdmin }) {
   }, [propIsAdmin]);
 
   const load = async () => {
+    // Kural listesi ve analist notlari yalnizca yoneticiye aciktir
+    if (!isAdmin) {
+      setItems([]);
+      setLoading(false);
+      setError('Kuralları görüntülemek için yönetici girişi gereklidir.');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -110,7 +117,8 @@ export function RulesPage({ onChanged, isAdmin: propIsAdmin }) {
 
   useEffect(() => {
     load();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin]);
 
   const counts = useMemo(
     () => ({
