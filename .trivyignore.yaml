@@ -322,3 +322,18 @@ vulnerabilities:
       kok dosya sistemiyle, sinirli yeteneklerle calisir (Z-09). Yeni postgres imaji yayimlaninca
       guncellenecek; tarih dolunca tarama yeniden basarisiz olur (Z-08).
     expired_at: 2026-12-31
+
+# Veritabani imajindaki Alpine libxml2 paketi. Kapsam yalnizca bu paket surumudur (purl);
+# libxml2 2.13.9-r3 iceren imaj yayimlaninca kayit artik eslesmez ve gereksiz kalir.
+  - id: CVE-2026-86144
+    purls:
+      - "pkg:apk/alpine/libxml2@2.13.9-r2?arch=x86_64&distro=3.24.4"
+    statement: >-
+      postgres:16.16-alpine (en guncel 16.x imaji, 2026-11-18 derlemesi dahil) Alpine libxml2
+      2.13.9-r2 ile geliyor; duzeltilmis 2.13.9-r3 surumu henuz upstream imaja girmedi. PostgreSQL
+      libxml2'yi yalnizca SQL XML islevlerinde (xmlparse, xpath, xmltable, xml turu) kullanir;
+      uygulama bu islevleri ve xml turunu kullanmaz, XML verisini veritabanina iletmez. Veritabani
+      yalnizca ic agda (db_net, internal), salt okunur kok dosya sistemi ve sinirli yeteneklerle
+      calisir (Z-09). Yeni postgres imaji yayimlaninca Dependabot ile guncellenecek; sure kisa
+      tutuldu, tarih dolunca tarama yeniden basarisiz olur (Z-08).
+    expired_at: 2026-12-15
