@@ -77,11 +77,19 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
+      # docker-compose.yml `env_file: .env` ister; .env depoda yoktur (.gitignore). Ornek dosyadan
+      # uretilir, aksi halde `docker compose config` basarisiz olur ve imaj listesi bos kalir.
+      - name: Compose icin .env (ornekten)
+        run: cp .env.example .env
       - name: Tum imajlar ozetle sabitli mi?
         env:
           POSTGRES_PASSWORD: ci-only-placeholder
         run: |
-          images=$(docker compose config --images | grep -v '^mihenk-backend' || true)
+          all_images=$(docker compose config --images) || { echo "::error::docker compose config basarisiz"; exit 1; }
+          images=$(echo "$all_images" | grep -v '^mihenk-backend' || true)
+          if [ -z "$images" ]; then
+            echo "::error::Compose imaj listesi bos"; exit 1
+          fi
           echo "$images"
           if echo "$images" | grep -v '@sha256:'; then
             echo "::error::Ozetle sabitlenmemis imaj var (image: ad:surum@sha256:...)"; exit 1
